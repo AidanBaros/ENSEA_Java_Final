@@ -1,16 +1,19 @@
 # ENSEA_Java_Final
 
-This is the description of our java project
+## Project description
 
-Ideas brainstormed so far:
-Minecraft mod
-Chatroom
-2 player game
-Scheduling app
+
+
+## Main Ideas brainstormed so far:
+- Chatroom
+- 2-player game
+- Scheduling app
 - Calendar + to do list + financing + time stamp + hr tracker + sleep tracker 
-Sudoku solver
+- Sudoku solver
 
+## Secondary Ideas
+- Minecraft mod
+- Weight room app
+- Recipes app
 
-
-Weight room app
-Recipes app
+## UML Diagram
