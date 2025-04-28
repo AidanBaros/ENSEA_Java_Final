@@ -5,6 +5,7 @@
 
 
 ## Main Ideas brainstormed so far:
+- Physics simulator (Balls bouncing around in another ball)
 - Chatroom
 - 2-player game
 - Scheduling app
