@@ -8,7 +8,7 @@
 - Physics simulator
 	- Balls bouncing around in another ball
 	- N-body gravitational simulation
-	- SPH fluid simulation
+	- SPH fluid simulation 
 - Chatroom
 - 2-player game
 - Scheduling app
