@@ -24,9 +24,9 @@ public Vector2D getVelocity() { return velocity; }
 // --- Setters ---
 public void setMass(Double mass) {this.mass = mass;}
 public void setSize(Double size) {this.size = size;}
-public void setPosition(Double x, Double y) {this.position.x = x; this.position.y = y;}
-public void setVelocity(Double vx, Double vy) {this.velocity.x = vx; this.velocity.y = vy;}
-public void setForce(Double fx, Double fy) {this.force.x = fx; this.force.y = fy;}
+public void setPosition(Vector2D position) {this.position = position;}
+public void setVelocity(Vector2D velocity) {this.velocity = velocity;}
+public void setForce(Vector2D force) {this.force = force;}
 
 // --- Builder ---
 public static class Builder {
