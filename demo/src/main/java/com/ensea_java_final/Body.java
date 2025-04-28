@@ -21,6 +21,13 @@ public Double getSize() { return size; }
 public Vector2D getPosition() { return position; }
 public Vector2D getVelocity() { return velocity; }
 
+// --- Setters ---
+public void setMass(Double mass) {this.mass = mass;}
+public void setSize(Double size) {this.size = size;}
+public void setPosition(Double x, Double y) {this.position.x = x; this.position.y = y;}
+public void setVelocity(Double vx, Double vy) {this.velocity.x = vx; this.velocity.y = vy;}
+public void setForce(Double fx, Double fy) {this.force.x = fx; this.force.y = fy;}
+
 // --- Builder ---
 public static class Builder {
     private Double mass, size;
