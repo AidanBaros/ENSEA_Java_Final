@@ -1,6 +1,26 @@
 # ENSEA_Java_Final
 
 ## Project description
+Make a circle focused physics simulator.
+
+## Primary Features
+- Physics Sim
+    - Environment 
+        - Gravity
+            - Body Gravity
+                - No directional gravity all gravity is from objects
+            - Directional Gravity 
+                - Base is earth Gravity so going down at 9.8m/s^2
+                - Able to change direction and force
+        - Time (Simulation speed)
+        - Delete if off screen
+    - Object
+        - Mass
+        - Size
+        - Elasticity
+        - Initial velocity
+        - Stating position
+        - Color
 
 
 
