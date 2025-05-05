@@ -35,8 +35,8 @@ public class Main {
             BallRenderer.drawCircle(x, y, radius, 32);
 
             // Simple bouncing logic
-            if (x + radius >= 1.0f || x - radius <= -1.0f) dx = -dx;
-            if (y + radius >= 1.0f || y - radius <= -1.0f) dy = -dy;
+            if (x + radius >= WindowManager.RIGHT_BOUND || x - radius <= WindowManager.LEFT_BOUND) dx = -dx;
+            if (y + radius >= WindowManager.TOP_BOUND || y - radius <= WindowManager.BOTTOM_BOUND) dy = -dy;
             x += dx;
             y += dy;
 
