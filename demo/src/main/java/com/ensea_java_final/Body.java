@@ -71,6 +71,7 @@ public class Body {
         private Double mass, size;
         private Double x, y;
         private Double vx = 0.0, vy = 0.0; // default to 0 if not set
+        private Boolean fixed = false;
 
         public Builder mass(Double mass) {
             this.mass = mass;
