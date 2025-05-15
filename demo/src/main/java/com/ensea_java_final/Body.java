@@ -5,6 +5,7 @@ import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
 
 public class Body {
     private Double mass, size;
+    private float r = 1.0f, g = 0.0f, b = 0.0f;
     private Vector2D position;
     private Vector2D velocity;
     private Vector2D force;
@@ -30,9 +31,11 @@ public class Body {
     public void setPosition(Vector2D position) {this.position = position;}
     public void setVelocity(Vector2D velocity) {this.velocity = velocity;}
     public void setForce(Vector2D force) {this.force = force;}
+    public void setColor(float r, float g, float b) {this.r = r; this.g = g; this.b = b;}
 
     public void draw() {
         glEnable(GL_MULTISAMPLE); // Enable multisampling for anti-aliasing
+        glColor3f(r, g, b);
         drawCircle(this.position.x.floatValue(), this.position.y.floatValue(), this.size.floatValue(), 64); // Increase segments for smoother edge
         glDisable(GL_MULTISAMPLE); // Optional: disable after drawing
     }
@@ -58,6 +61,8 @@ public class Body {
         private Double mass, size;
         private Double x, y;
         private Double vx = 0.0, vy = 0.0; // default to 0 if not set
+        private float r = 1.0f, g = 1.0f, b = 1.0f; // default to white if not set
+
 
         public Builder mass(Double mass) {
             this.mass = mass;
@@ -78,6 +83,13 @@ public class Body {
         public Builder velocity(Double vx, Double vy) {
             this.vx = vx;
             this.vy = vy;
+            return this;
+        }
+
+        public Builder color(float r, float g, float b) {
+            this.r = r;
+            this.g = g;
+            this.b = b;
             return this;
         }
 
