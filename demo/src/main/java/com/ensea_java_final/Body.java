@@ -7,6 +7,7 @@ public class Body {
     private Vector2D position;
     private Vector2D velocity;
     private Vector2D force;
+    private Boolean fixed;
 
     // Private constructor: enforce use of Builder
     private Body(Builder builder) {
@@ -22,6 +23,8 @@ public class Body {
     public Double getSize() { return size; }
     public Vector2D getPosition() { return position; }
     public Vector2D getVelocity() { return velocity; }
+    public Vector2D getForce() { return force; }
+    public Boolean isFixed() { return fixed; }
 
     // --- Setters ---
     public void setMass(Double mass) {this.mass = mass;}
@@ -29,10 +32,23 @@ public class Body {
     public void setPosition(Vector2D position) {this.position = position;}
     public void setVelocity(Vector2D velocity) {this.velocity = velocity;}
     public void setForce(Vector2D force) {this.force = force;}
+    public void setFixed(Boolean fixed) {this.fixed = fixed;}
+
+
+    // --- Functions ---
+    public void move(Vector2D position){
+        if (!fixed){
+            this.position = position;
+        }
+        else{
+            throw new IllegalStateException("Body is fixed and can not be moved");
+        }
+    }
 
     public void draw() {
         drawCircle(this.position.x.floatValue(), this.position.y.floatValue(), this.size.floatValue(), 32);
     }
+  
     public static void drawCircle(float cx, float cy, float r, int segments) {
         glBegin(GL_TRIANGLE_FAN);
         glVertex2f(cx, cy);
@@ -55,6 +71,7 @@ public class Body {
         private Double mass, size;
         private Double x, y;
         private Double vx = 0.0, vy = 0.0; // default to 0 if not set
+        private Boolean fixed = false;
 
         public Builder mass(Double mass) {
             this.mass = mass;
@@ -78,11 +95,19 @@ public class Body {
             return this;
         }
 
+        public Builder fixed(Boolean fixed) {
+            this.fixed = fixed;
+            return this;
+        }
+
         public Body build() {
             if (mass == null || size == null || x == null || y == null) {
                 throw new IllegalStateException("Mass, Size, and Position must be set.");
             }
-            return new Body(this);
+
+            Body b = new Body(this);
+            PhysicsEngine.addBody(b);
+            return b;
         }
     }
 }
