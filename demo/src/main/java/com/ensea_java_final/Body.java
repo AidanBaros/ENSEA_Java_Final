@@ -13,10 +13,11 @@ public class Body {
     private float r = 1.0f, g = 0.0f, b = 0.0f;
     private Vector2D position;
     private Vector2D velocity;
-    private Vector2D force;
+    private Vector2D acceleration;
     private Boolean fixed;
     private Integer textureId = null;
     private String texturePath = null;
+    private Boolean isColliding;
 
     // Private constructor: enforce use of Builder
     private Body(Builder builder) {
@@ -24,10 +25,10 @@ public class Body {
         this.size = builder.size;
         this.position = new Vector2D(builder.x, builder.y);
         this.velocity = new Vector2D(builder.vx, builder.vy);
-        this.force = new Vector2D(0.0, 0.0);
         this.r = builder.r;
         this.g = builder.g;
         this.b = builder.b;
+        this.acceleration = new Vector2D(0.0, 0.0);
         this.fixed = builder.fixed;
         if (builder.texturePath != null) {
             this.texturePath = builder.texturePath;
@@ -40,17 +41,18 @@ public class Body {
     public Double getSize() { return size; }
     public Vector2D getPosition() { return position; }
     public Vector2D getVelocity() { return velocity; }
-    public Vector2D getForce() { return force; }
+    public Vector2D getAcceleration() { return acceleration; }
     public Boolean isFixed() { return fixed; }
     public Integer getTextureId() { return textureId; }
     public String getTexturePath() { return texturePath; }
+    public Boolean isColliding() {return isColliding; }
 
     // --- Setters ---
     public void setMass(Double mass) {this.mass = mass;}
     public void setSize(Double size) {this.size = size;}
     public void setPosition(Vector2D position) {this.position = position;}
     public void setVelocity(Vector2D velocity) {this.velocity = velocity;}
-    public void setForce(Vector2D force) {this.force = force;}
+    public void setAcceleration(Vector2D acceleration) {this.acceleration = acceleration;}
     public void setFixed(Boolean fixed) {this.fixed = fixed;}
     public void setColor(float r, float g, float b) {this.r = r; this.g = g; this.b = b;}
     public void setTexture(String path) {
@@ -60,6 +62,8 @@ public class Body {
         this.textureId = loadTexture(path);
         this.texturePath = path;
     }
+    public void setColliding(Boolean colliding) {this.isColliding = colliding; }
+
 
     // --- Functions ---
     public void move(Vector2D position){
@@ -156,6 +160,7 @@ public class Body {
         private Boolean fixed = false;
         private float r = 1.0f, g = 1.0f, b = 1.0f; // default to white if not set
         private String texturePath = null;
+        private Boolean isColliding = false;
 
         public Builder mass(Double mass) {
             this.mass = mass;
@@ -202,7 +207,6 @@ public class Body {
             }
 
             Body b = new Body(this);
-            // PhysicsEngine.addBody(b);
             return b;
         }
     }

@@ -9,7 +9,8 @@ import static org.lwjgl.opengl.GL.*;
 public class Main {
     private long window;
 
-    private List<Body> bodies;
+    private ArrayList<Body> bodies = new ArrayList<Body>();
+    private PhysicsEngine physicsEngine = new PhysicsEngine(bodies);
 
     public static void main(String[] args) {
         new Main().run();
@@ -21,15 +22,13 @@ public class Main {
 
         createCapabilities();
 
-        bodies = new ArrayList<Body>();
         // Add bodies here
-        bodies.add(new Body.Builder().mass(1.0).size(0.1).position(0.1, 0.1).velocity(0.0, 0.0).color(1.0f,1.0f,0.0f).texture("texture/face.png").build());
-      
-        tick++;
-        if (tick == tickRate){ // use modulus?
-            tick = 0;
-            loop();
-        }
+        bodies.add(new Body.Builder().mass(1.0).size(0.1).position(0.0, 0.0).velocity(1.0, 0.0).build()); //add call to fixed()
+        bodies.add(new Body.Builder().mass(1.0).size(0.1).position(0.5, 0.0).velocity(0.0, 1.0).build());
+        bodies.add(new Body.Builder().mass(1.0).size(0.1).position(0.0, 0.5).velocity(0.0, -1.0).build());
+        bodies.add(new Body.Builder().mass(1.0).size(0.1).position(0.5, 0.5).velocity(-1.0, 0.0).build());
+
+        loop();
 
 
         WindowManager.cleanup();
@@ -39,6 +38,7 @@ public class Main {
         while (!glfwWindowShouldClose(window)) {
             glClear(GL_COLOR_BUFFER_BIT);
 
+            physicsEngine.update();
             for (Body body:bodies) {
                 body.draw();
             }
