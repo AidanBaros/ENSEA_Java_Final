@@ -3,6 +3,15 @@
 ## Project description
 Make a circle focused physics simulator.
 
+## Instructions
+- Windows
+    - Ensure `<properties>` of `pom.xml` contains `<lwjgl.natives>natives-windows</lwjgl.natives>` to ensure the correct lwjgl libraries are downloaded in the compilation process
+    - Compile the project with `mvn clean compile`
+    - The project is executed with the plugin `exec`; therefore execute the project with `mvn exec:java`
+- Mac
+    - Ensure `<properties>` of `pom.xml` contains `<lwjgl.natives>natives-macos-arm64</lwjgl.natives>` to ensure the correct lwjgl libraries are downloaded in the compilation process
+    - Compile and run the project with `./run.sh`
+
 ## Primary Features
 - Physics Sim
     - Environment 
