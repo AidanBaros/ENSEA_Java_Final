@@ -21,7 +21,7 @@ public class PhysicsEngine {
 
     public void moveBodies() {
         for (Body body:bodies) {
-            body.move(body.getPosition().add(body.getVelocity().scale(simulationDeltaT)))
+            body.move(body.getPosition().add(body.getVelocity().scale(simulationDeltaT)));
         }
     }
 }
