@@ -2,6 +2,7 @@ package com.ensea_java_final;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
@@ -19,6 +20,7 @@ public class WindowManager {
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+        glfwWindowHint(GLFW_SAMPLES, 4); // 4x anti-aliasing
 
         window = glfwCreateWindow(width, height, title, 0, 0);
         if (window == 0)
@@ -31,6 +33,8 @@ public class WindowManager {
 
         glfwMakeContextCurrent(window);
         GL.createCapabilities();
+        glEnable(GL_MULTISAMPLE); // anti-aliasing
+
         glfwSwapInterval(1);
         glfwShowWindow(window);
 
