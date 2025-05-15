@@ -23,7 +23,7 @@ public class Main {
 
         bodies = new ArrayList<Body>();
         // Add bodies here
-        bodies.add(new Body.Builder().mass(1.0).size(0.1).position(0.1, 0.1).velocity(0.0, 0.0).build());
+        bodies.add(new Body.Builder().mass(1.0).size(0.1).position(0.1, 0.1).velocity(0.0, 0.0).color(1.0f,1.0f,0.0f).texture("texture/face.png").build());
 
         loop();
 

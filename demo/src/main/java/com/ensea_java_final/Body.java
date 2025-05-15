@@ -2,6 +2,11 @@ package com.ensea_java_final;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.stb.STBImage;
+
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 public class Body {
     private Double mass, size;
@@ -9,6 +14,9 @@ public class Body {
     private Vector2D position;
     private Vector2D velocity;
     private Vector2D force;
+    private Boolean fixed;
+    private Integer textureId = null;
+    private String texturePath = null;
 
     // Private constructor: enforce use of Builder
     private Body(Builder builder) {
@@ -17,6 +25,14 @@ public class Body {
         this.position = new Vector2D(builder.x, builder.y);
         this.velocity = new Vector2D(builder.vx, builder.vy);
         this.force = new Vector2D(0.0, 0.0);
+        this.r = builder.r;
+        this.g = builder.g;
+        this.b = builder.b;
+        this.fixed = builder.fixed;
+        if (builder.texturePath != null) {
+            this.texturePath = builder.texturePath;
+            this.textureId = loadTexture(builder.texturePath);
+        }
     }
 
     // --- Getters ---
@@ -24,6 +40,10 @@ public class Body {
     public Double getSize() { return size; }
     public Vector2D getPosition() { return position; }
     public Vector2D getVelocity() { return velocity; }
+    public Vector2D getForce() { return force; }
+    public Boolean isFixed() { return fixed; }
+    public Integer getTextureId() { return textureId; }
+    public String getTexturePath() { return texturePath; }
 
     // --- Setters ---
     public void setMass(Double mass) {this.mass = mass;}
@@ -31,19 +51,41 @@ public class Body {
     public void setPosition(Vector2D position) {this.position = position;}
     public void setVelocity(Vector2D velocity) {this.velocity = velocity;}
     public void setForce(Vector2D force) {this.force = force;}
+    public void setFixed(Boolean fixed) {this.fixed = fixed;}
     public void setColor(float r, float g, float b) {this.r = r; this.g = g; this.b = b;}
+    public void setTexture(String path) {
+        if (this.textureId != null) {
+            glDeleteTextures(this.textureId);
+        }
+        this.textureId = loadTexture(path);
+        this.texturePath = path;
+    }
+
+    // --- Functions ---
+    public void move(Vector2D position){
+        if (!fixed){
+            this.position = position;
+        }
+        else{
+            throw new IllegalStateException("Body is fixed and can not be moved");
+        }
+    }
 
     public void draw() {
         glEnable(GL_MULTISAMPLE); // Enable multisampling for anti-aliasing
-        glColor3f(r, g, b);
-        drawCircle(this.position.x.floatValue(), this.position.y.floatValue(), this.size.floatValue(), 64); // Increase segments for smoother edge
-        glDisable(GL_MULTISAMPLE); // Optional: disable after drawing
+        if (textureId != null) {
+            drawTexturedCircle(this.position.x.floatValue(), this.position.y.floatValue(), this.size.floatValue(), 64, textureId);
+        } else {
+            glColor3f(r, g, b);
+            drawCircle(this.position.x.floatValue(), this.position.y.floatValue(), this.size.floatValue(), 64);
+        }
+        glDisable(GL_MULTISAMPLE);
     }
+
     public static void drawCircle(float cx, float cy, float r, int segments) {
         glBegin(GL_TRIANGLE_FAN);
         glVertex2f(cx, cy);
         double step = 2.0 * Math.PI / segments;
-        
         //redraw
         for (int i = 0; i <= segments; i++) {
             double angle = i * step;
@@ -55,14 +97,65 @@ public class Body {
         glEnd();
     }
 
+    public static void drawTexturedCircle(float cx, float cy, float r, int segments, int textureId) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        glColor3f(1, 1, 1);
+
+        glBegin(GL_TRIANGLE_FAN);
+        glTexCoord2f(0.5f, 0.5f);
+        glVertex2f(cx, cy);
+        double step = 2.0 * Math.PI / segments;
+        for (int i = 0; i <= segments; i++) {
+            double angle = i * step;
+            float x = cx + (float)Math.cos(angle) * r;
+            float y = cy + (float)Math.sin(angle) * r;
+            float u = 0.5f + 0.5f * (float)Math.cos(angle);
+            float v = 0.5f + 0.5f * (float)Math.sin(angle);
+            glTexCoord2f(u, v);
+            glVertex2f(x, y);
+        }
+        glEnd();
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_TEXTURE_2D);
+    }
+
+    private static int loadTexture(String path) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            // Flip image vertically so textures appear right-side up in OpenGL
+            STBImage.stbi_set_flip_vertically_on_load(true);
+
+            IntBuffer w = stack.mallocInt(1);
+            IntBuffer h = stack.mallocInt(1);
+            IntBuffer comp = stack.mallocInt(1);
+
+            ByteBuffer image = STBImage.stbi_load(path, w, h, comp, 4);
+            if (image == null) {
+                throw new RuntimeException("Failed to load texture: " + path);
+            }
+
+            int texId = glGenTextures();
+            glBindTexture(GL_TEXTURE_2D, texId);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w.get(0), h.get(0), 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            STBImage.stbi_image_free(image);
+            return texId;
+        }
+    }
 
     // --- Builder ---
     public static class Builder {
         private Double mass, size;
         private Double x, y;
         private Double vx = 0.0, vy = 0.0; // default to 0 if not set
+        private Boolean fixed = false;
         private float r = 1.0f, g = 1.0f, b = 1.0f; // default to white if not set
-
+        private String texturePath = null;
 
         public Builder mass(Double mass) {
             this.mass = mass;
@@ -93,11 +186,24 @@ public class Body {
             return this;
         }
 
+        public Builder texture(String path) {
+            this.texturePath = path;
+            return this;
+        }
+
+        public Builder fixed(Boolean fixed) {
+            this.fixed = fixed;
+            return this;
+        }
+
         public Body build() {
             if (mass == null || size == null || x == null || y == null) {
                 throw new IllegalStateException("Mass, Size, and Position must be set.");
             }
-            return new Body(this);
+
+            Body b = new Body(this);
+            // PhysicsEngine.addBody(b);
+            return b;
         }
     }
 }
