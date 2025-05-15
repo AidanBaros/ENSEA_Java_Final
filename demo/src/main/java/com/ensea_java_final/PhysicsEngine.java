@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 public class PhysicsEngine {
     private static ArrayList<Body> bodies = new ArrayList<Body>();
+    private static double simulationDeltaT = 0.001;
     public static void addBody(Body b) {
         bodies.add(b);
     }
@@ -17,4 +18,10 @@ public class PhysicsEngine {
             }
         }
     } 
+
+    public void moveBodies() {
+        for (Body body:bodies) {
+            body.move(body.getPosition().add(body.getVelocity().scale(simulationDeltaT)))
+        }
+    }
 }
