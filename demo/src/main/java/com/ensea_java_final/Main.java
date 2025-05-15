@@ -26,7 +26,7 @@ public class Main {
         bodies.add(new Body.Builder().mass(1.0).size(0.1).position(0.1, 0.1).velocity(0.0, 0.0).build()); //add call to fixed()
       
         tick++;
-        if (tick == tickRate){
+        if (tick == tickRate){ // use modulus?
             tick = 0;
             loop();
         }
