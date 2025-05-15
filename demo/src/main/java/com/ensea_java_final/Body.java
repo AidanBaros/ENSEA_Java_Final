@@ -1,6 +1,7 @@
 package com.ensea_java_final;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
 
 public class Body {
     private Double mass, size;
@@ -31,7 +32,9 @@ public class Body {
     public void setForce(Vector2D force) {this.force = force;}
 
     public void draw() {
-        drawCircle(this.position.x.floatValue(), this.position.y.floatValue(), this.size.floatValue(), 32);
+        glEnable(GL_MULTISAMPLE); // Enable multisampling for anti-aliasing
+        drawCircle(this.position.x.floatValue(), this.position.y.floatValue(), this.size.floatValue(), 64); // Increase segments for smoother edge
+        glDisable(GL_MULTISAMPLE); // Optional: disable after drawing
     }
     public static void drawCircle(float cx, float cy, float r, int segments) {
         glBegin(GL_TRIANGLE_FAN);
