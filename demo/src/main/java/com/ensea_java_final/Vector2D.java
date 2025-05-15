@@ -29,4 +29,14 @@ public class Vector2D {
         if (mag == 0) return new Vector2D(0.0, 0.0);
         return new Vector2D(x / mag, y / mag);
     }
+
+    public double distance(Vector2D other) {
+        double dx = this.x - other.x;
+        double dy = this.y - other.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    public double dot(Vector2D other) {
+        return this.x * other.x + this.y * other.y;
+    }
 }
