@@ -81,7 +81,9 @@ public class Body {
             if (mass == null || size == null || x == null || y == null) {
                 throw new IllegalStateException("Mass, Size, and Position must be set.");
             }
-            return new Body(this);
+            Body b = new Body(this);
+            PhysicsEngine.addBody(b);
+            return b;
         }
     }
 }
