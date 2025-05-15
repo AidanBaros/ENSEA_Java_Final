@@ -23,7 +23,7 @@ public class Main {
 
         bodies = new ArrayList<Body>();
         // Add bodies here
-        bodies.add(new Body.Builder().mass(1.0).size(0.1).position(0.1, 0.1).velocity(0.0, 0.0).build());
+        bodies.add(new Body.Builder().mass(1.0).size(0.1).position(0.1, 0.1).velocity(0.0, 0.0).build()); //add call to fixed()
       
         tick++;
         if (tick == tickRate){
