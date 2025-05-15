@@ -1,5 +1,7 @@
 package com.ensea_java_final;
 
+import static org.lwjgl.opengl.GL11.*;
+
 public class Body {
     private Double mass, size;
     private Vector2D position;
@@ -21,6 +23,7 @@ public class Body {
     public Double getSize() { return size; }
     public Vector2D getPosition() { return position; }
     public Vector2D getVelocity() { return velocity; }
+    public Vector2D getForce() { return force; }
     public Boolean isFixed() { return fixed; }
 
     // --- Setters ---
@@ -42,13 +45,32 @@ public class Body {
         }
     }
 
+    public void draw() {
+        drawCircle(this.position.x.floatValue(), this.position.y.floatValue(), this.size.floatValue(), 32);
+    }
+  
+    public static void drawCircle(float cx, float cy, float r, int segments) {
+        glBegin(GL_TRIANGLE_FAN);
+        glVertex2f(cx, cy);
+        double step = 2.0 * Math.PI / segments;
+        
+        //redraw
+        for (int i = 0; i <= segments; i++) {
+            double angle = i * step;
+            glVertex2f(
+                cx + (float)Math.cos(angle) * r,
+                cy + (float)Math.sin(angle) * r
+            );
+        }
+        glEnd();
+    }
+
 
     // --- Builder ---
     public static class Builder {
         private Double mass, size;
         private Double x, y;
         private Double vx = 0.0, vy = 0.0; // default to 0 if not set
-        private Boolean fixed = false;
 
         public Builder mass(Double mass) {
             this.mass = mass;
@@ -72,7 +94,7 @@ public class Body {
             return this;
         }
 
-        public Builder mass(Boolean fixed) {
+        public Builder fixed(Boolean fixed) {
             this.fixed = fixed;
             return this;
         }
@@ -81,6 +103,7 @@ public class Body {
             if (mass == null || size == null || x == null || y == null) {
                 throw new IllegalStateException("Mass, Size, and Position must be set.");
             }
+
             Body b = new Body(this);
             PhysicsEngine.addBody(b);
             return b;

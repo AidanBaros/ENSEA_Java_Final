@@ -1,9 +1,9 @@
 package com.ensea_java_final;
 
 public class Vector2D {
-    public double x, y;
+    public Double x, y;
 
-    public Vector2D(double x, double y) {
+    public Vector2D(Double x, Double y) {
         this.x = x;
         this.y = y;
     }
@@ -26,7 +26,7 @@ public class Vector2D {
 
     public Vector2D normalize() {
         double mag = magnitude();
-        if (mag == 0) return new Vector2D(0, 0);
+        if (mag == 0) return new Vector2D(0.0, 0.0);
         return new Vector2D(x / mag, y / mag);
     }
 
