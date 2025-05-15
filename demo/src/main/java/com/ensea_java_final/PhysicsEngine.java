@@ -8,6 +8,11 @@ public class PhysicsEngine {
     public static void addBody(Body b) {
         bodies.add(b);
     }
+
+    public void update(){
+        resolveCollisions();
+        moveBodies();
+    }
     
     public void resolveCollisions() {
         int size = bodies.size();
@@ -48,7 +53,7 @@ public class PhysicsEngine {
             }
         }
     } 
-  
+
     public void moveBodies() {
         for (Body body:bodies) {
             body.move(body.getPosition().add(body.getVelocity().scale(simulationDeltaT)));

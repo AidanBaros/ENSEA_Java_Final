@@ -12,6 +12,8 @@ public class Main {
     private float x = 0.0f, y = 0.0f; //ball pos
     private float dx = 0.01f, dy = 0.015f; //ball vel
     private final float radius = 0.1f;
+    private int tickRate = 50;
+    private int tick = 0;
 
     public static void main(String[] args) {
         new Main().run();
@@ -23,7 +25,11 @@ public class Main {
 
         createCapabilities();
 
-        loop();
+        tick++;
+        if (tick == tickRate){
+            tick = 0;
+            loop();
+        }
 
         WindowManager.cleanup();
     }
