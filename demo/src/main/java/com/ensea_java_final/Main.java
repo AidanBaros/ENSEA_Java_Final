@@ -66,6 +66,13 @@ public class Main {
             } else {
                 physicsEngine.setGravityType("game");
             }
+
+            if (root.has("simulationName")) {
+                String simulationName = root.get("simulationName").asText();
+                glfwSetWindowTitle(window, simulationName);
+            } else {
+                glfwSetWindowTitle(window, "Physics Simulation");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
