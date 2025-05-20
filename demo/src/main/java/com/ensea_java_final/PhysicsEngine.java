@@ -12,7 +12,7 @@ public class PhysicsEngine {
     private Dictionary<String, Double> gravityDict =  new Hashtable<>();
 
     
-    public PhysicsEngine(ArrayList bodies){
+    public PhysicsEngine(ArrayList<Body> bodies){
         this.bodies = bodies;
         gravityDict.put("standard",6.67430e-11);
         gravityDict.put("earth",-9.8);
