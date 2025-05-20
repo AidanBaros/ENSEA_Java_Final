@@ -10,6 +10,7 @@ public class PhysicsEngine {
     private ArrayList<Body> bodies = new ArrayList<Body>();
     private Double simulationDeltaT = 0.001;
     private Dictionary<String, Double> gravityDict =  new Hashtable<>();
+    private String gravityType = "game";
 
     
     public PhysicsEngine(ArrayList<Body> bodies){
@@ -19,9 +20,18 @@ public class PhysicsEngine {
         gravityDict.put("game",1.0);
     }
 
+    public void setGravityType(String gravityType){
+        if (gravityDict.get(gravityType) != null){
+            this.gravityType = gravityType;
+        } else {
+            System.out.println("Invalid gravity type. Defaulting to game gravity.");
+            this.gravityType = "game";
+        }
+    }
+
     public void update(){
         resolveCollisions();
-        applyGravity(true,gravityDict.get("game"));
+        applyGravity(true,gravityDict.get(gravityType));
         moveBodies();
     }
     
