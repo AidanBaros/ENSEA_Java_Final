@@ -20,7 +20,7 @@ jobs:
 
       - name: Build and generate UML diagrams
         run: mvn clean generate-sources generate-resources
-        working-directory: /
+        working-directory: /home/runner/work/ENSEA_Java_Final/ENSEA_Java_Final/demo
 
       
       - name: Add cache-busting query to README
