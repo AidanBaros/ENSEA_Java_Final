@@ -5,12 +5,22 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Enumeration;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class PhysicsEngine {
     private ArrayList<Body> bodies = new ArrayList<Body>();
     private Double simulationDeltaT = 0.001;
     private Dictionary<String, Double> gravityDict =  new Hashtable<>();
     private String gravityType = "game";
+    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private Double timeScale = 1.0; // 1.0 = real time, 0.5 = half speed, 2.0 = double speed
+    private Double adjustedDeltaT = simulationDeltaT * timeScale;
+
+    public Double getTimeScale(){ return timeScale;}
+    public void setTimeScale(Double timeScale){ this.timeScale = timeScale;}
 
     
     public PhysicsEngine(ArrayList<Body> bodies){
@@ -29,78 +39,142 @@ public class PhysicsEngine {
         }
     }
 
-    public void update(){
-        resolveCollisions();
-        applyGravity(true,gravityDict.get(gravityType));
+    public void update() {
+        adjustedDeltaT = simulationDeltaT * timeScale;
+        applyGravity(true, gravityDict.get(gravityType));
         moveBodies();
+        resolveCollisions(); 
     }
     
     public void resolveCollisions() {
-        int size = bodies.size();
+        ArrayList<CollisionPair> collisionPairs = new ArrayList<>();
 
-        for (int i = 0; i < size; i++) {
-            Body bodyA = bodies.get(i);
-            bodyA.setColliding(false);
-            for (int j = i + 1; j < size; j++) { // Avoid double-checking and self-collision
-                Body bodyB = bodies.get(j);
-                bodyB.setColliding(false);
-                Double distance = bodyA.getPosition().distance(bodyB.getPosition());
-                Double collisionDistance = bodyA.getSize() + bodyB.getSize(); // Assuming size = radius
-
-                //System.out.println("Distance:" + distance + "   Collision Distance:" + collisionDistance);
-                if (distance <= collisionDistance) {
-                    bodyA.setColliding(true);
-                    bodyB.setColliding(true);
-                    // Compute normal
-                    Vector2D normal = bodyB.getPosition().subtract(bodyA.getPosition()).normalize();
-
-                    // Relative velocity
-                    Vector2D relativeVelocity = bodyA.getVelocity().subtract(bodyB.getVelocity());
-
-                    // Velocity along the normal
-                    Double velAlongNormal = relativeVelocity.dot(normal);
-                    //System.out.println(velAlongNormal);
-
-                    // Don't resolve if already separating
-                    if (velAlongNormal <= 0) { continue; }
-                    //System.out.println("test");
-
-                    // Calculate restitution (elasticity)
-                    Double restitution = 1.0; // perfectly elastic
-
-                    // Calculate impulse scalar
-                    Double impulseScalar = -(1 + restitution) * velAlongNormal / 
-                            (1 / bodyA.getMass() + 1 / bodyB.getMass());
-
-                    // Apply impulse to both bodies
-                    Vector2D impulse = normal.scale(impulseScalar);
-                    bodyA.setVelocity(bodyA.getVelocity().add(impulse.scale(1 / bodyA.getMass())));
-                    bodyB.setVelocity(bodyB.getVelocity().subtract(impulse.scale(1 / bodyB.getMass())));
-                }
-                //System.out.println("    Body A:" + bodyA.isColliding() + "   Body B:" + bodyB.isColliding());
-            }
-        }
-    } 
-
-    public void moveBodies() {
-        for (Body body:bodies) {
-            body.move(body.getPosition().add(body.getVelocity().scale(simulationDeltaT)));
-        }
-    }
-
-    public void applyGravity(Boolean isNBody, Double gravity) {
-    if (!isNBody){
-        for (Body body : bodies) {
-            directionalGravity(body, gravity);
-        }
-    }
-    else{
         for (int i = 0; i < bodies.size(); i++) {
             Body bodyA = bodies.get(i);
             for (int j = i + 1; j < bodies.size(); j++) {
                 Body bodyB = bodies.get(j);
-                bodyGravity(bodyA, bodyB, gravity);
+                double distance = bodyA.getPosition().distance(bodyB.getPosition());
+                double collisionDistance = bodyA.getSize() + bodyB.getSize();
+
+                if (distance <= collisionDistance) {
+                    collisionPairs.add(new CollisionPair(bodyA, bodyB));
+                }
             }
+        }
+
+        ArrayList<Callable<Void>> tasks = new ArrayList<>();
+        for (CollisionPair pair : collisionPairs) {
+            tasks.add(() -> {
+                resolveCollision(pair.bodyA, pair.bodyB);
+                return null;
+            });
+        }
+
+        try {
+            executor.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void resolveCollision(Body bodyA, Body bodyB) {
+        Vector2D delta = bodyB.getPosition().subtract(bodyA.getPosition());
+        Double distance = delta.magnitude();
+        Double minDistance = bodyA.getSize() + bodyB.getSize();
+
+        if (distance == 0.0) return;
+
+        Vector2D normal = delta.normalize();
+        Double penetration = minDistance - distance;
+
+        if (penetration > 0) {
+            Double totalMass = bodyA.getMass() + bodyB.getMass();
+            Vector2D correction = normal.scale(penetration / totalMass);
+
+            synchronized (bodyA) {
+                bodyA.move(bodyA.getPosition().subtract(correction.scale(bodyB.getMass())));
+            }
+            synchronized (bodyB) {
+                bodyB.move(bodyB.getPosition().add(correction.scale(bodyA.getMass())));
+            }
+        }
+
+        Vector2D relativeVelocity = bodyB.getVelocity().subtract(bodyA.getVelocity());
+        double velAlongNormal = relativeVelocity.dot(normal);
+
+        if (velAlongNormal >= 0) return;
+
+        double restitution = 0.8;
+
+        double impulseScalar = -(1 + restitution) * velAlongNormal / 
+                (1 / bodyA.getMass() + 1 / bodyB.getMass());
+
+        Vector2D impulse = normal.scale(impulseScalar);
+
+        synchronized (bodyA) {
+            bodyA.setVelocity(bodyA.getVelocity().subtract(impulse.scale(1 / bodyA.getMass())));
+        }
+        synchronized (bodyB) {
+            bodyB.setVelocity(bodyB.getVelocity().add(impulse.scale(1 / bodyB.getMass())));
+        }
+
+        bodyA.setColliding(true);
+        bodyB.setColliding(true);
+    }
+
+
+    public void moveBodies() {
+        ArrayList<Callable<Void>> tasks = new ArrayList<>();
+
+        for (Body body : bodies) {
+            tasks.add(() -> {
+                body.move(body.getPosition().add(body.getVelocity().scale(adjustedDeltaT)));
+                return null;
+            });
+        }
+
+        try {
+            executor.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public void applyGravity(boolean isNBody, double gravity) {
+    if (!isNBody) {
+        ArrayList<Callable<Void>> tasks = new ArrayList<>();
+        for (Body body : bodies) {
+            tasks.add(() -> {
+                directionalGravity(body, gravity);
+                return null;
+            });
+        }
+
+        try {
+            executor.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+    } else {
+        ArrayList<Callable<Void>> tasks = new ArrayList<>();
+
+        for (int i = 0; i < bodies.size(); i++) {
+            Body bodyA = bodies.get(i);
+            for (int j = i + 1; j < bodies.size(); j++) {
+                Body bodyB = bodies.get(j);
+
+                tasks.add(() -> {
+                    bodyGravity(bodyA, bodyB, gravity);
+                    return null;
+                });
+            }
+        }
+
+        try {
+            executor.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }
@@ -115,12 +189,39 @@ public class PhysicsEngine {
         Vector2D accelerationB = normal.scale(-forceMagnitude / bodyB.getMass());
 
         // Update velocities
-        bodyA.setVelocity(bodyA.getVelocity().add(accelerationA.scale(simulationDeltaT)));
-        bodyB.setVelocity(bodyB.getVelocity().add(accelerationB.scale(simulationDeltaT)));
+        synchronized (bodyA) {
+            bodyA.setVelocity(bodyA.getVelocity().add(accelerationA.scale(adjustedDeltaT)));
+        }
+        synchronized (bodyB) {
+            bodyB.setVelocity(bodyB.getVelocity().add(accelerationB.scale(adjustedDeltaT)));
+        }
     }
 
     public void directionalGravity(Body body, Double gravity){
         Vector2D gravityVector = new Vector2D(0.0, gravity);
-        body.setVelocity(body.getVelocity().add(gravityVector.scale(simulationDeltaT)));
+        body.setVelocity(body.getVelocity().add(gravityVector.scale(adjustedDeltaT)));
+    }
+
+    private void waitForTasks() {
+        try {
+            executor.awaitTermination(1, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public void shutdownExecutor() {
+        if (!executor.isShutdown()) {
+            executor.shutdown();
+        }
+    }
+
+    private static class CollisionPair {
+        Body bodyA, bodyB;
+
+        CollisionPair(Body a, Body b) {
+            this.bodyA = a;
+            this.bodyB = b;
+        }
     }
 }

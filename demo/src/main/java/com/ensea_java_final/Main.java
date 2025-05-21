@@ -80,6 +80,7 @@ public class Main {
         loop();
 
 
+        physicsEngine.shutdownExecutor();
         WindowManager.cleanup();
     }
 

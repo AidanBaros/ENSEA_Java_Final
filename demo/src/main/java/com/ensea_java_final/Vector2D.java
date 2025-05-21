@@ -43,4 +43,9 @@ public class Vector2D {
     public Double dot(Vector2D other) {
         return this.x * other.x + this.y * other.y;
     }
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ")";
+    }
 }
