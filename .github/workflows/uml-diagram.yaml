@@ -23,7 +23,7 @@ jobs:
           java-version: '17'
 
       - name: Build and generate UML diagrams
-        run: mvn -ntp clean generate-sources generate-resources
+        run: mvn -ntp clean compile generate-sources generate-resources
         working-directory: demo/
 
       - name: Configure Git
