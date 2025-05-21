@@ -19,7 +19,7 @@ public class Main {
     }
 
     public void run() {
-        String scenarioPath = "scenario/two_body_stable.json";
+        String scenarioPath = "scenario/test2.json";
         WindowManager.init(800, 600, "Physics Simulation");
         window = WindowManager.getWindow();
 
@@ -43,7 +43,8 @@ public class Main {
                         bodyNode.get("velocity").get(0).asDouble(),
                         bodyNode.get("velocity").get(1).asDouble()
                     )
-                    .fixed(bodyNode.has("fixed") && bodyNode.get("fixed").asBoolean());
+                    .fixed(bodyNode.has("fixed") && bodyNode.get("fixed").asBoolean()) // default to false
+                    .colliding(bodyNode.has("colliding") && bodyNode.get("colliding").asBoolean()); // default to false
 
                 if (bodyNode.has("color")) {
                     builder.color(

@@ -198,6 +198,11 @@ public class Body {
             return this;
         }
 
+        public Builder colliding(Boolean colliding) {
+            this.isColliding = colliding;
+            return this;
+        }
+
         public Body build() {
             if (mass == null || size == null || x == null || y == null) {
                 throw new IllegalStateException("Mass, Size, and Position must be set.");
