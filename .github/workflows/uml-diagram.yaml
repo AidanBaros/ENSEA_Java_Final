@@ -22,6 +22,9 @@ jobs:
         run: mvn -ntp clean generate-sources generate-resources
         working-directory: demo/
 
+      - name: Debug git remote
+        run: git remote -v
+
       - name: Set up git for pushing
         run: |
           git config --global user.name "github-actions[bot]"
