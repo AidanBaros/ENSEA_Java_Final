@@ -8,11 +8,20 @@
     <artifactId>demo</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <profiles>
+        <profile>
+            <id>generate-uml</id>
+            <build>
+                <defaultGoal>generate-sources generate-resources</defaultGoal>
+            </build>
+        </profile>
+    </profiles>
+
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
        	<lwjgl.version>3.3.6</lwjgl.version>
-    	<lwjgl.natives>natives-macos-arm64</lwjgl.natives>
+    	<lwjgl.natives>natives-windows</lwjgl.natives>
     </properties>
 
     <build>
@@ -31,6 +40,54 @@
                         <org.lwjgl.librarypath>${project.basedir}/target/natives</org.lwjgl.librarypath>
                     </systemPropertyVariables>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>de.elnarion.maven</groupId>
+                <artifactId>plantuml-generator-maven-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>generate-class-diagram</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <outputFilename>uml-diagram.puml</outputFilename>
+                            <outputDirectory>diagram</outputDirectory>
+                            <scanPackages>com.ensea_java_final</scanPackages>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.github.davidmoten</groupId>
+                <artifactId>plantuml-maven-plugin</artifactId>
+                <version>0.2.13</version> <!-- Use the latest version available -->
+                <executions>
+                    <execution>
+                        <id>generate-diagrams</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <directory>${project.basedir}/diagram</directory>
+                                <includes>
+                                    <include>**/*.puml</include>
+                                </includes>
+                            </sources>
+                            <outputDirectory>${project.basedir}/diagram</outputDirectory>
+                            <formats>
+                                <format>png</format>
+                                <format>svg</format>
+                            </formats>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -396,6 +453,11 @@
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-tinyfd</artifactId>
+            <classifier>${lwjgl.natives}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-tootle</artifactId>
             <classifier>${lwjgl.natives}</classifier>
         </dependency>
         <dependency>

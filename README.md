@@ -85,7 +85,8 @@ Simulation scenarios are encoded using JSON files. The JSON files are located in
         - Stating position
         - Color
 
-
+## UML Diagram
+![UML Diagram](demo/diagram/uml-diagram.png?raw=true&v=17d8234)
 
 ## Main Ideas brainstormed so far:
 - Physics simulator
@@ -102,5 +103,3 @@ Simulation scenarios are encoded using JSON files. The JSON files are located in
 - Minecraft mod
 - Weight room app
 - Recipes app
-
-## UML Diagram
