@@ -43,9 +43,7 @@ public class Main {
                         bodyNode.get("velocity").get(0).asDouble(),
                         bodyNode.get("velocity").get(1).asDouble()
                     )
-                    .fixed(bodyNode.has("fixed") && bodyNode.get("fixed").asBoolean()) // default to false
-                    .colliding(bodyNode.has("colliding") && bodyNode.get("colliding").asBoolean()); // default to false
-
+                    .fixed(bodyNode.has("fixed") && bodyNode.get("fixed").asBoolean());
                 if (bodyNode.has("color")) {
                     builder.color(
                         (float) bodyNode.get("color").get(0).asDouble(),
