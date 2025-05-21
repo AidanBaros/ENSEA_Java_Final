@@ -7,10 +7,14 @@ on:
 jobs:
   generate-uml:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Grants write access to repository contents
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # Prevents overriding custom git credentials
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -22,24 +26,17 @@ jobs:
         run: mvn -ntp clean generate-sources generate-resources
         working-directory: demo/
 
-
-
-      - name: Set up git for pushing
+      - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.UML_BOT_PAT }}@github.com/${{ github.repository }}
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
 
-
-      - name: Debug git remote
-        run: git remote -v
-        
       - name: Commit UML diagram
         run: |
-          git add demo/diagram/uml-diagram.png
-          git add demo/diagram/uml-diagram.svg
+          git add demo/diagram/uml-diagram.png demo/diagram/uml-diagram.svg
           git commit -m "Update UML diagram [auto]" || echo "No changes to commit"
-          git push || echo "No changes to push"
+          git push
 
       - name: Add cache-busting query to README
         run: |
@@ -47,7 +44,7 @@ jobs:
           sed -i 's#demo/diagram/uml-diagram.png.*#demo/diagram/uml-diagram.png?raw=true\&v='"$SHA"')#' README.md
           git add README.md
           git commit -m "Update UML diagram cache-busting SHA [auto]" || echo "No changes to commit"
-          git push || echo "No changes to push"
+          git push
 
       - name: Update README with UML diagram (if not present)
         run: |
@@ -55,7 +52,7 @@ jobs:
             echo -e "\n## UML Class Diagram\n\n![UML Diagram](diagram/uml-diagram.png)\n" >> README.md
             git add README.md
             git commit -m "Add UML diagram to README [auto]" || echo "No changes to commit"
-            git push || echo "No changes to push"
+            git push
           fi
 
       - name: Verify UML diagram image exists in remote repo after push
