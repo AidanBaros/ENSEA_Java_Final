@@ -34,6 +34,32 @@ Simulation scenarios are encoded using JSON files. The JSON files are located in
 | fixed        | boolean  | No       | If true, body does not move. Defaults to `false`.                           |
 | texturePath  | string   | No       | Path to a texture image for the body. If omitted, uses color.               |
 
+### Example
+
+```json
+{
+  "simulationName": "Stable Two-Body Orbit",
+  "gravityType": "game",
+  "bodies": [
+    {
+      "mass": 1.0,
+      "size": 0.07,
+      "position": [-0.25, 0.0],
+      "velocity": [0.0, 1.0],
+      "color": [1.0, 0.0, 0.0],
+      "fixed": false
+    },
+    {
+      "mass": 1.0,
+      "size": 0.07,
+      "position": [0.25, 0.0],
+      "velocity": [0.0, -1.0],
+      "color": [0.0, 1.0, 0.0],
+      "fixed": false
+    }
+  ]
+}
+
 ---
 
 ## Primary Features
