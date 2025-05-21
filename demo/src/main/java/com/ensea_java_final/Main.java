@@ -19,7 +19,7 @@ public class Main {
     }
 
     public void run() {
-        String scenarioPath = "scenario/test2.json";
+        String scenarioPath = "scenario/orbit_fixed.json";
         WindowManager.init(800, 600, "Physics Simulation");
         window = WindowManager.getWindow();
 
