@@ -80,19 +80,38 @@ public class Main {
         loop();
 
 
+        physicsEngine.shutdownExecutor();
         WindowManager.cleanup();
     }
 
     private void loop() {
         while (!glfwWindowShouldClose(window)) {
+            glfwPollEvents();
+            handleInput();
+
             glClear(GL_COLOR_BUFFER_BIT);
 
             physicsEngine.update();
-            for (Body body:bodies) {
+
+            for (Body body : bodies) {
                 body.draw();
             }
 
             WindowManager.update();
+        }
+    }
+
+    private void handleInput() {
+        if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS) { // '+' key
+            Double current = physicsEngine.getTimeScale();
+            physicsEngine.setTimeScale(Math.min(current + 0.1, 5.0));
+            System.out.println("Time Scale: " + physicsEngine.getTimeScale());
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS) { // '-' key
+            Double current = physicsEngine.getTimeScale();
+            physicsEngine.setTimeScale(Math.max(current - 0.1, 0.0));
+            System.out.println("Time Scale: " + physicsEngine.getTimeScale());
         }
     }
 }
