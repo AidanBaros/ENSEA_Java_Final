@@ -79,6 +79,7 @@ public class Main {
     }
 
     public void run() {
+        String scenarioPath = "scenario/nbody.json";
         // *** 1) Force compatibility profile so fixed-function calls work ***
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
