@@ -48,6 +48,7 @@ public class PhysicsEngine {
     
     public void resolveCollisions() {
         ArrayList<CollisionPair> collisionPairs = new ArrayList<>();
+        ArrayList<CollisionContact> contacts = new ArrayList<>();
 
         for (int i = 0; i < bodies.size(); i++) {
             Body bodyA = bodies.get(i);
@@ -59,27 +60,39 @@ public class PhysicsEngine {
                 double collisionDistance = bodyA.getSize() + bodyB.getSize();
                 if (distance > collisionDistance) continue;
 
-                // Narrow phase: per-pixel collision if both have alpha masks
+                // Narrow phase: per-pixel collision if either has alpha mask
                 if (bodyA.hasAlphaMask() && bodyB.hasAlphaMask()) {
-                    if (!perPixelCollision(bodyA, bodyB)) continue;
+                    Vector2D contact = perPixelCollisionContact(bodyA, bodyB);
+                    if (contact == null) continue;
+                    contacts.add(new CollisionContact(bodyA, bodyB, contact));
                 }
-                // If only one has alpha mask, check that one
                 else if (bodyA.hasAlphaMask()) {
-                    if (!perPixelCircleCollision(bodyA, bodyB)) continue;
+                    Vector2D contact = perPixelCircleCollisionContact(bodyA, bodyB);
+                    if (contact == null) continue;
+                    contacts.add(new CollisionContact(bodyA, bodyB, contact));
                 }
                 else if (bodyB.hasAlphaMask()) {
-                    if (!perPixelCircleCollision(bodyB, bodyA)) continue;
+                    Vector2D contact = perPixelCircleCollisionContact(bodyB, bodyA);
+                    if (contact == null) continue;
+                    contacts.add(new CollisionContact(bodyA, bodyB, contact));
                 }
-                // else: fallback to bounding circle (already passed)
-
-                collisionPairs.add(new CollisionPair(bodyA, bodyB));
+                else {
+                    // fallback: bounding circle
+                    collisionPairs.add(new CollisionPair(bodyA, bodyB));
+                }
             }
         }
 
         ArrayList<Callable<Void>> tasks = new ArrayList<>();
         for (CollisionPair pair : collisionPairs) {
             tasks.add(() -> {
-                resolveCollision(pair.bodyA, pair.bodyB);
+                resolveCollision(pair.bodyA, pair.bodyB, null);
+                return null;
+            });
+        }
+        for (CollisionContact contact : contacts) {
+            tasks.add(() -> {
+                resolveCollision(contact.bodyA, contact.bodyB, contact.contactPoint);
                 return null;
             });
         }
@@ -91,54 +104,46 @@ public class PhysicsEngine {
         }
     }
 
-    // Per-pixel collision for two textured bodies
-    private boolean perPixelCollision(Body texA, Body texB) {
-        // Only works for circles, assumes both are circles
+    // Returns the first contact point (world coordinates) for two textured bodies, or null if none
+    private Vector2D perPixelCollisionContact(Body texA, Body texB) {
         Vector2D posA = texA.getPosition();
         Vector2D posB = texB.getPosition();
         double rA = texA.getSize();
         double rB = texB.getSize();
 
-        // Find overlap bounding box in world coordinates
         double minX = Math.max(posA.x - rA, posB.x - rB);
         double maxX = Math.min(posA.x + rA, posB.x + rB);
         double minY = Math.max(posA.y - rA, posB.y - rB);
         double maxY = Math.min(posA.y + rA, posB.y + rB);
 
-        // Step size: sample at pixel resolution of the larger texture
         int steps = Math.max(Math.max(texA.getTexWidth(), texB.getTexWidth()), 16);
         double stepX = (maxX - minX) / steps;
         double stepY = (maxY - minY) / steps;
 
         for (double x = minX; x <= maxX; x += stepX) {
             for (double y = minY; y <= maxY; y += stepY) {
-                // Check if point is inside both circles
                 if (posA.distance(new Vector2D(x, y)) > rA) continue;
                 if (posB.distance(new Vector2D(x, y)) > rB) continue;
-                // Map to texA's texture space
                 int ax = worldToTexture(x, posA.x, rA, texA.getTexWidth());
                 int ay = worldToTexture(y, posA.y, rA, texA.getTexHeight());
-                // Map to texB's texture space
                 int bx = worldToTexture(x, posB.x, rB, texB.getTexWidth());
                 int by = worldToTexture(y, posB.y, rB, texB.getTexHeight());
-                // Check alpha
                 if (inBounds(ax, ay, texA) && inBounds(bx, by, texB)
                     && texA.getAlphaMask()[ax][ay] && texB.getAlphaMask()[bx][by]) {
-                    return true;
+                    return new Vector2D(x, y);
                 }
             }
         }
-        return false;
+        return null;
     }
 
-    // Per-pixel collision for one textured body and one circle
-    private boolean perPixelCircleCollision(Body texBody, Body circBody) {
+    // Returns the first contact point (world coordinates) for a textured and a circle body, or null if none
+    private Vector2D perPixelCircleCollisionContact(Body texBody, Body circBody) {
         Vector2D posA = texBody.getPosition();
         Vector2D posB = circBody.getPosition();
         double rA = texBody.getSize();
         double rB = circBody.getSize();
 
-        // Find overlap bounding box in world coordinates
         double minX = Math.max(posA.x - rA, posB.x - rB);
         double maxX = Math.min(posA.x + rA, posB.x + rB);
         double minY = Math.max(posA.y - rA, posB.y - rB);
@@ -155,15 +160,14 @@ public class PhysicsEngine {
                 int ax = worldToTexture(x, posA.x, rA, texBody.getTexWidth());
                 int ay = worldToTexture(y, posA.y, rA, texBody.getTexHeight());
                 if (inBounds(ax, ay, texBody) && texBody.getAlphaMask()[ax][ay]) {
-                    return true;
+                    return new Vector2D(x, y);
                 }
             }
         }
-        return false;
+        return null;
     }
 
     private int worldToTexture(double coord, double center, double radius, int texSize) {
-        // Map world coordinate to [0, texSize-1]
         double norm = (coord - (center - radius)) / (2 * radius);
         return (int)(norm * (texSize - 1));
     }
@@ -172,20 +176,47 @@ public class PhysicsEngine {
         return x >= 0 && x < body.getTexWidth() && y >= 0 && y < body.getTexHeight();
     }
 
-    private void resolveCollision(Body bodyA, Body bodyB) {
-        Vector2D delta = bodyB.getPosition().subtract(bodyA.getPosition());
-        Double distance = delta.magnitude();
-        Double minDistance = bodyA.getSize() + bodyB.getSize();
+    // Modified to use contactPoint if provided (for per-pixel collision)
+    private void resolveCollision(Body bodyA, Body bodyB, Vector2D contactPoint) {
+        Vector2D posA = bodyA.getPosition();
+        Vector2D posB = bodyB.getPosition();
 
-        if (distance == 0.0) return;
+        Vector2D normal;
+        double penetration;
 
-        Vector2D normal = delta.normalize();
-        Double penetration = minDistance - distance;
+        if (contactPoint != null) {
+            boolean aTextured = bodyA.hasAlphaMask();
+            boolean bTextured = bodyB.hasAlphaMask();
+            if (aTextured && !bTextured) {
+                normal = contactPoint.subtract(posB).normalize();
+                penetration = bodyB.getSize() - posB.distance(contactPoint);
+            } else if (!aTextured && bTextured) {
+                normal = posA.subtract(contactPoint).normalize();
+                penetration = bodyA.getSize() - posA.distance(contactPoint);
+            } else {
+                normal = posA.subtract(posB).normalize();
+                penetration = Math.min(
+                    bodyA.getSize() - posA.distance(contactPoint),
+                    bodyB.getSize() - posB.distance(contactPoint)
+                );
+            }
+        } else {
+            Vector2D delta = posB.subtract(posA);
+            double distance = delta.magnitude();
+            double minDistance = bodyA.getSize() + bodyB.getSize();
+            if (distance == 0.0) return;
+            normal = delta.normalize();
+            penetration = minDistance - distance;
+        }
 
-        if (penetration > 0) {
+        // --- Improved stabilization and velocity clamping ---
+        double slop = 1e-2; // Allowable penetration before correction
+        double percent = 0.05; // Correction percent (5%)
+        double maxVelocity = 2.0; // Maximum allowed velocity after collision
+
+        if (penetration > slop) {
             Double totalMass = bodyA.getMass() + bodyB.getMass();
-            Vector2D correction = normal.scale(penetration / totalMass);
-
+            Vector2D correction = normal.scale(percent * (penetration - slop) / totalMass);
             synchronized (bodyA) {
                 bodyA.move(bodyA.getPosition().subtract(correction.scale(bodyB.getMass())));
             }
@@ -197,24 +228,36 @@ public class PhysicsEngine {
         Vector2D relativeVelocity = bodyB.getVelocity().subtract(bodyA.getVelocity());
         double velAlongNormal = relativeVelocity.dot(normal);
 
-        if (velAlongNormal >= 0) return;
+        // Only apply impulse if bodies are moving toward each other and penetration is significant
+        if (velAlongNormal >= 0 || penetration <= slop) return;
 
-        double restitution = 0.8;
+        double restitution = 0.2; // Lower restitution for stability
 
-        double impulseScalar = -(1 + restitution) * velAlongNormal / 
+        double impulseScalar = -(1 + restitution) * velAlongNormal /
                 (1 / bodyA.getMass() + 1 / bodyB.getMass());
 
         Vector2D impulse = normal.scale(impulseScalar);
 
         synchronized (bodyA) {
-            bodyA.setVelocity(bodyA.getVelocity().subtract(impulse.scale(1 / bodyA.getMass())));
+            Vector2D newVel = bodyA.getVelocity().subtract(impulse.scale(1 / bodyA.getMass()));
+            bodyA.setVelocity(clampVelocity(newVel, maxVelocity));
         }
         synchronized (bodyB) {
-            bodyB.setVelocity(bodyB.getVelocity().add(impulse.scale(1 / bodyB.getMass())));
+            Vector2D newVel = bodyB.getVelocity().add(impulse.scale(1 / bodyB.getMass()));
+            bodyB.setVelocity(clampVelocity(newVel, maxVelocity));
         }
 
         bodyA.setColliding(true);
         bodyB.setColliding(true);
+    }
+
+    // Clamp velocity vector to a maximum magnitude
+    private Vector2D clampVelocity(Vector2D v, double maxVel) {
+        double mag = v.magnitude();
+        if (mag > maxVel) {
+            return v.normalize().scale(maxVel);
+        }
+        return v;
     }
 
 
@@ -311,9 +354,19 @@ public class PhysicsEngine {
         }
     }
 
+    // Helper class for per-pixel collision contacts
+    private static class CollisionContact {
+        Body bodyA, bodyB;
+        Vector2D contactPoint;
+        CollisionContact(Body a, Body b, Vector2D contact) {
+            this.bodyA = a;
+            this.bodyB = b;
+            this.contactPoint = contact;
+        }
+    }
+
     private static class CollisionPair {
         Body bodyA, bodyB;
-
         CollisionPair(Body a, Body b) {
             this.bodyA = a;
             this.bodyB = b;
