@@ -860,7 +860,7 @@
             <classifier>${lwjgl.natives}</classifier>
 
         </dependency>
-        
+
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-stb</artifactId>

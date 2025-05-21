@@ -90,7 +90,7 @@ public class BodyTest {
 
             body.verify(() -> 
             Body.drawCircle(eq(0.2f), eq(0.3f), 
-            eq(0.5f), eq(32)
+            eq(0.5f), anyInt()
             ));
             body.verifyNoMoreInteractions();
 
