@@ -20,13 +20,13 @@ jobs:
 
       - name: Build and generate UML diagrams
         run: mvn clean generate-sources generate-resources
-        working-directory: /home/runner/work/ENSEA_Java_Final/ENSEA_Java_Final/demo
+        working-directory: demo/
 
       
       - name: Add cache-busting query to README
         run: |
           SHA=$(git rev-parse --short HEAD)
-          sed -i 's#diagram/class-diagram.png.*#diagram/class-diagram.png?raw=true\&v='"$SHA"')#' README.md
+          sed -i 's#diagram/uml-diagram.png.*#diagram/uml-diagram.png?raw=true\&v='"$SHA"')#' README.md
           git add README.md
           git commit -m "Update UML diagram cache-busting SHA [auto]" || echo "No changes to commit"
           git push || echo "No changes to push"
@@ -35,15 +35,15 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add diagram/class-diagram.png
-          git add diagram/class-diagram.svg
+          git add diagram/uml-diagram.png
+          git add diagram/uml-diagram.svg
           git commit -m "Update UML diagram [auto]" || echo "No changes to commit"
           git push || echo "No changes to push"
 
       - name: Update README with UML diagram (if not present)
         run: |
-          if ! grep -q "diagram/class-diagram.png" README.md; then
-            echo -e "\n## UML Class Diagram\n\n![UML Diagram](diagram/class-diagram.png)\n" >> README.md
+          if ! grep -q "diagram/uml-diagram.png" README.md; then
+            echo -e "\n## UML Class Diagram\n\n![UML Diagram](diagram/uml-diagram.png)\n" >> README.md
             git add README.md
             git commit -m "Add UML diagram to README [auto]" || echo "No changes to commit"
             git push || echo "No changes to push"
