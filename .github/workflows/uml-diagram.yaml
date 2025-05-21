@@ -46,15 +46,6 @@ jobs:
           git commit -m "Update UML diagram cache-busting SHA [auto]" || echo "No changes to commit"
           git push
 
-      - name: Update README with UML diagram (if not present)
-        run: |
-          if ! grep -q "diagram/uml-diagram.png" README.md; then
-            echo -e "\n## UML Class Diagram\n\n![UML Diagram](diagram/uml-diagram.png)\n" >> README.md
-            git add README.md
-            git commit -m "Add UML diagram to README [auto]" || echo "No changes to commit"
-            git push
-          fi
-
       - name: Verify UML diagram image exists in remote repo after push
         run: |
           git clone --branch ${{ github.ref_name }} https://github.com/${{ github.repository }} temp-check

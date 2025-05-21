@@ -49,9 +49,3 @@ Make a circle focused physics simulator.
 - Minecraft mod
 - Weight room app
 - Recipes app
-
-
-## UML Class Diagram
-
-![UML Diagram](diagram/uml-diagram.png)
-
