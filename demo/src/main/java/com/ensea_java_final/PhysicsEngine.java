@@ -53,12 +53,26 @@ public class PhysicsEngine {
             Body bodyA = bodies.get(i);
             for (int j = i + 1; j < bodies.size(); j++) {
                 Body bodyB = bodies.get(j);
+
+                // Broad phase: bounding circle
                 double distance = bodyA.getPosition().distance(bodyB.getPosition());
                 double collisionDistance = bodyA.getSize() + bodyB.getSize();
+                if (distance > collisionDistance) continue;
 
-                if (distance <= collisionDistance) {
-                    collisionPairs.add(new CollisionPair(bodyA, bodyB));
+                // Narrow phase: per-pixel collision if both have alpha masks
+                if (bodyA.hasAlphaMask() && bodyB.hasAlphaMask()) {
+                    if (!perPixelCollision(bodyA, bodyB)) continue;
                 }
+                // If only one has alpha mask, check that one
+                else if (bodyA.hasAlphaMask()) {
+                    if (!perPixelCircleCollision(bodyA, bodyB)) continue;
+                }
+                else if (bodyB.hasAlphaMask()) {
+                    if (!perPixelCircleCollision(bodyB, bodyA)) continue;
+                }
+                // else: fallback to bounding circle (already passed)
+
+                collisionPairs.add(new CollisionPair(bodyA, bodyB));
             }
         }
 
@@ -75,6 +89,87 @@ public class PhysicsEngine {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    // Per-pixel collision for two textured bodies
+    private boolean perPixelCollision(Body texA, Body texB) {
+        // Only works for circles, assumes both are circles
+        Vector2D posA = texA.getPosition();
+        Vector2D posB = texB.getPosition();
+        double rA = texA.getSize();
+        double rB = texB.getSize();
+
+        // Find overlap bounding box in world coordinates
+        double minX = Math.max(posA.x - rA, posB.x - rB);
+        double maxX = Math.min(posA.x + rA, posB.x + rB);
+        double minY = Math.max(posA.y - rA, posB.y - rB);
+        double maxY = Math.min(posA.y + rA, posB.y + rB);
+
+        // Step size: sample at pixel resolution of the larger texture
+        int steps = Math.max(Math.max(texA.getTexWidth(), texB.getTexWidth()), 16);
+        double stepX = (maxX - minX) / steps;
+        double stepY = (maxY - minY) / steps;
+
+        for (double x = minX; x <= maxX; x += stepX) {
+            for (double y = minY; y <= maxY; y += stepY) {
+                // Check if point is inside both circles
+                if (posA.distance(new Vector2D(x, y)) > rA) continue;
+                if (posB.distance(new Vector2D(x, y)) > rB) continue;
+                // Map to texA's texture space
+                int ax = worldToTexture(x, posA.x, rA, texA.getTexWidth());
+                int ay = worldToTexture(y, posA.y, rA, texA.getTexHeight());
+                // Map to texB's texture space
+                int bx = worldToTexture(x, posB.x, rB, texB.getTexWidth());
+                int by = worldToTexture(y, posB.y, rB, texB.getTexHeight());
+                // Check alpha
+                if (inBounds(ax, ay, texA) && inBounds(bx, by, texB)
+                    && texA.getAlphaMask()[ax][ay] && texB.getAlphaMask()[bx][by]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Per-pixel collision for one textured body and one circle
+    private boolean perPixelCircleCollision(Body texBody, Body circBody) {
+        Vector2D posA = texBody.getPosition();
+        Vector2D posB = circBody.getPosition();
+        double rA = texBody.getSize();
+        double rB = circBody.getSize();
+
+        // Find overlap bounding box in world coordinates
+        double minX = Math.max(posA.x - rA, posB.x - rB);
+        double maxX = Math.min(posA.x + rA, posB.x + rB);
+        double minY = Math.max(posA.y - rA, posB.y - rB);
+        double maxY = Math.min(posA.y + rA, posB.y + rB);
+
+        int steps = Math.max(texBody.getTexWidth(), 16);
+        double stepX = (maxX - minX) / steps;
+        double stepY = (maxY - minY) / steps;
+
+        for (double x = minX; x <= maxX; x += stepX) {
+            for (double y = minY; y <= maxY; y += stepY) {
+                if (posA.distance(new Vector2D(x, y)) > rA) continue;
+                if (posB.distance(new Vector2D(x, y)) > rB) continue;
+                int ax = worldToTexture(x, posA.x, rA, texBody.getTexWidth());
+                int ay = worldToTexture(y, posA.y, rA, texBody.getTexHeight());
+                if (inBounds(ax, ay, texBody) && texBody.getAlphaMask()[ax][ay]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private int worldToTexture(double coord, double center, double radius, int texSize) {
+        // Map world coordinate to [0, texSize-1]
+        double norm = (coord - (center - radius)) / (2 * radius);
+        return (int)(norm * (texSize - 1));
+    }
+
+    private boolean inBounds(int x, int y, Body body) {
+        return x >= 0 && x < body.getTexWidth() && y >= 0 && y < body.getTexHeight();
     }
 
     private void resolveCollision(Body bodyA, Body bodyB) {

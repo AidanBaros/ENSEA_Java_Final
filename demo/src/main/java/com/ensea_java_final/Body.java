@@ -19,6 +19,10 @@ public class Body {
     private String texturePath = null;
     private Boolean isColliding;
 
+    // Per-pixel alpha mask for texture collision
+    private boolean[][] alphaMask = null;
+    private int texWidth = 0, texHeight = 0;
+
     // Private constructor: enforce use of Builder
     private Body(Builder builder) {
         this.mass = builder.mass;
@@ -33,6 +37,7 @@ public class Body {
         if (builder.texturePath != null) {
             this.texturePath = builder.texturePath;
             this.textureId = loadTexture(builder.texturePath);
+            loadAlphaMask(builder.texturePath);
         }
     }
 
@@ -146,6 +151,34 @@ public class Body {
 
             STBImage.stbi_image_free(image);
             return texId;
+        }
+    }
+
+    // --- Per-pixel collision helpers ---
+    public boolean hasAlphaMask() { return alphaMask != null; }
+    public boolean[][] getAlphaMask() { return alphaMask; }
+    public int getTexWidth() { return texWidth; }
+    public int getTexHeight() { return texHeight; }
+
+    private void loadAlphaMask(String path) {
+        try (org.lwjgl.system.MemoryStack stack = org.lwjgl.system.MemoryStack.stackPush()) {
+            org.lwjgl.stb.STBImage.stbi_set_flip_vertically_on_load(true);
+            java.nio.IntBuffer w = stack.mallocInt(1);
+            java.nio.IntBuffer h = stack.mallocInt(1);
+            java.nio.IntBuffer comp = stack.mallocInt(1);
+            java.nio.ByteBuffer image = org.lwjgl.stb.STBImage.stbi_load(path, w, h, comp, 4);
+            if (image == null) return;
+            texWidth = w.get(0);
+            texHeight = h.get(0);
+            alphaMask = new boolean[texWidth][texHeight];
+            for (int y = 0; y < texHeight; y++) {
+                for (int x = 0; x < texWidth; x++) {
+                    int i = (x + y * texWidth) * 4;
+                    int alpha = image.get(i + 3) & 0xFF;
+                    alphaMask[x][y] = alpha > 0;
+                }
+            }
+            org.lwjgl.stb.STBImage.stbi_image_free(image);
         }
     }
 
