@@ -19,7 +19,7 @@
             "size": 0.1,
             "position": [0.0, 0.5],
             "velocity": [0.0, -1.0],
-            "texturePath": "texture/face.png"
+            "texturePath": "texture/ball.png"
         },
         {
             "mass": 1.0,
