@@ -12,6 +12,9 @@ Make a circle focused physics simulator.
     - Ensure `<properties>` of `pom.xml` contains `<lwjgl.natives>natives-macos-arm64</lwjgl.natives>` to ensure the correct lwjgl libraries are downloaded in the compilation process
     - Compile and run the project with `./run.sh`
 
+## Texture Specification
+Textures for bodies should be square in size. For the most accurate texture-hitbox matching, the pixels that constitute the circle should reach the edge of the image.
+
 ## JSON Formatting Specification
 Simulation scenarios are encoded using JSON files. The JSON files are located in demo/scenario/. The scenario file includes simulation parameters and body data.
 
