@@ -54,9 +54,8 @@ jobs:
 
       - name: Verify UML diagram image exists in remote repo after push
         run: |
-          git fetch origin
-          git checkout ${{ github.ref_name }}
-          if [ ! -f demo/diagram/uml-diagram.png ]; then
+          git clone --branch ${{ github.ref_name }} https://github.com/${{ github.repository }} temp-check
+          if [ ! -f temp-check/demo/diagram/uml-diagram.png ]; then
             echo "ERROR: UML diagram image not found in remote repo after push!"
             exit 1
           fi
