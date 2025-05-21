@@ -70,9 +70,6 @@ public class Body {
         if (!fixed){
             this.position = position;
         }
-        else{
-            throw new IllegalStateException("Body is fixed and can not be moved");
-        }
     }
 
     public void draw() {

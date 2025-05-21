@@ -1,0 +1,31 @@
+{
+    "simulationName": "Four bodies",
+    "gravityType": "game",
+    "bodies": [
+        {
+            "mass": 1.0,
+            "size": 0.1,
+            "position": [0.0, 0.0],
+            "velocity": [1.0, 0.0]
+        },
+        {
+            "mass": 1.0,
+            "size": 0.1,
+            "position": [0.5, 0.0],
+            "velocity": [0.0, 1.0]
+        },
+        {
+            "mass": 1.0,
+            "size": 0.1,
+            "position": [0.0, 0.5],
+            "velocity": [0.0, -1.0],
+            "texturePath": "texture/face.png"
+        },
+        {
+            "mass": 1.0,
+            "size": 0.1,
+            "position": [0.5, 0.5],
+            "velocity": [-1.0, 0.0]
+        }
+    ]
+    }
