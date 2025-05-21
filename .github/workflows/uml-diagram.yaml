@@ -27,15 +27,15 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add diagram/uml-diagram.png
-          git add diagram/uml-diagram.svg
+          git add demo/diagram/uml-diagram.png
+          git add demo/diagram/uml-diagram.svg
           git commit -m "Update UML diagram [auto]" || echo "No changes to commit"
           git push || echo "No changes to push"
 
       - name: Add cache-busting query to README
         run: |
           SHA=$(git rev-parse --short HEAD)
-          sed -i 's#diagram/uml-diagram.png.*#diagram/uml-diagram.png?raw=true\&v='"$SHA"')#' README.md
+          sed -i 's#demo/diagram/uml-diagram.png.*#demo/diagram/uml-diagram.png?raw=true\&v='"$SHA"')#' README.md
           git add README.md
           git commit -m "Update UML diagram cache-busting SHA [auto]" || echo "No changes to commit"
           git push || echo "No changes to push"
