@@ -1,0 +1,48 @@
+name: Generate UML Diagram
+
+on:
+  push:
+    branches: [ "*" ]
+
+jobs:
+  generate-uml:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build and generate UML diagrams
+        run: mvn clean generate-sources generate-resources
+      
+      - name: Add cache-busting query to README
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          sed -i 's#diagram/class-diagram.png.*#diagram/class-diagram.png?raw=true\&v='"$SHA"')#' README.md
+          git add README.md
+          git commit -m "Update UML diagram cache-busting SHA [auto]" || echo "No changes to commit"
+          git push || echo "No changes to push"
+      
+      - name: Commit UML diagram
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add diagram/class-diagram.png
+          git add diagram/class-diagram.svg
+          git commit -m "Update UML diagram [auto]" || echo "No changes to commit"
+          git push || echo "No changes to push"
+
+      - name: Update README with UML diagram (if not present)
+        run: |
+          if ! grep -q "diagram/class-diagram.png" README.md; then
+            echo -e "\n## UML Class Diagram\n\n![UML Diagram](diagram/class-diagram.png)\n" >> README.md
+            git add README.md
+            git commit -m "Add UML diagram to README [auto]" || echo "No changes to commit"
+            git push || echo "No changes to push"
+          fi

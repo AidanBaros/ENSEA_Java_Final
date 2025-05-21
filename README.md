@@ -31,7 +31,8 @@ Make a circle focused physics simulator.
         - Stating position
         - Color
 
-
+## UML Diagram
+![UML Diagram](diagram/class-diagram.png?raw=true&v=<SHA>)
 
 ## Main Ideas brainstormed so far:
 - Physics simulator
@@ -49,4 +50,3 @@ Make a circle focused physics simulator.
 - Weight room app
 - Recipes app
 
-## UML Diagram
