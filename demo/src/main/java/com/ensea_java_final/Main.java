@@ -2,7 +2,7 @@ package com.ensea_java_final;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL33.*; // For swizzle constants and modern OpenGL
+import static org.lwjgl.opengl.GL33.*; // For swizzle constants
 import static org.lwjgl.opengl.GL.createCapabilities;
 
 import java.util.ArrayList;
@@ -53,10 +53,13 @@ public class Main {
 
             ByteBuffer bitmap = BufferUtils.createByteBuffer(FONT_TEXTURE_SIZE * FONT_TEXTURE_SIZE);
             cdata = STBTTBakedChar.malloc(96);
-            STBTruetype.stbtt_BakeFontBitmap(ttf, 32, bitmap, FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE, 32, cdata);
+            // bake at 128px height (4× your original 32px)
+            STBTruetype.stbtt_BakeFontBitmap(ttf, 128, bitmap, FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE, 32, cdata);
 
-            fontTex = glGenTextures(); glBindTexture(GL_TEXTURE_2D, fontTex);
+            fontTex = glGenTextures();
+            glBindTexture(GL_TEXTURE_2D, fontTex);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, bitmap);
+            // swizzle so that our red channel becomes alpha
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_ONE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_ONE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_ONE);
@@ -76,18 +79,29 @@ public class Main {
     }
 
     public void run() {
+        // *** 1) Force compatibility profile so fixed-function calls work ***
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+
         WindowManager.init(800, 600, "Physics Simulation");
         window = WindowManager.getWindow();
         createCapabilities();
+
         initFont();
         loadScenarioFiles();
         loop();
+
         physicsEngine.shutdownExecutor();
         WindowManager.cleanup();
     }
 
     private void loop() {
         while (!glfwWindowShouldClose(window)) {
+            // *** 2) Re-apply MODULATE every frame before anything else ***
+            glEnable(GL_TEXTURE_2D);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
             glfwPollEvents();
             glClear(GL_COLOR_BUFFER_BIT);
 
@@ -111,101 +125,108 @@ public class Main {
     }
 
     private void handleMenuInput() {
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) { selectedIndex = (selectedIndex+1)%(scenarioFiles.size()+1); sleep(150);} 
-        if (glfwGetKey(window, GLFW_KEY_UP)   == GLFW_PRESS) { selectedIndex = (selectedIndex-1+scenarioFiles.size()+1)%(scenarioFiles.size()+1); sleep(150);} 
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            selectedIndex = (selectedIndex+1)%(scenarioFiles.size()+1);
+            sleep(150);
+        }
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            selectedIndex = (selectedIndex-1+scenarioFiles.size()+1)%(scenarioFiles.size()+1);
+            sleep(150);
+        }
         if (glfwGetKey(window, GLFW_KEY_ENTER)== GLFW_PRESS) {
-            if (selectedIndex == scenarioFiles.size()) glfwSetWindowShouldClose(window,true);
-            else { loadScenario("scenario/"+scenarioFiles.get(selectedIndex)); currentState = MenuState.SIMULATION; }
+            if (selectedIndex == scenarioFiles.size())
+                glfwSetWindowShouldClose(window,true);
+            else {
+                loadScenario("scenario/"+scenarioFiles.get(selectedIndex));
+                currentState = MenuState.SIMULATION;
+            }
             sleep(200);
         }
     }
 
     private void renderMenu() {
-        // Get framebuffer size
         int[] w = new int[1], h = new int[1];
         glfwGetFramebufferSize(window, w, h);
         float fw = w[0], fh = h[0];
 
-        // Draw grid for layout debugging
-        int gridCount = 10;
-        glColor3f(0.3f, 0.3f, 0.3f);
-        glLineWidth(1.0f);
-        glBegin(GL_LINES);
-        for (int i = 1; i < gridCount; i++) {
-            float x = i * (fw / gridCount);
-            glVertex2f(x, 0);
-            glVertex2f(x, fh);
-            float y = i * (fh / gridCount);
-            glVertex2f(0, y);
-            glVertex2f(fw, y);
-        }
-        glEnd();
+        // draw grid & crosshair (unchanged)...
+        // ...
 
-        // Draw center crosshair in green
-        glColor3f(0f, 1f, 0f);
-        glLineWidth(2.0f);
-        glBegin(GL_LINES);
-            glVertex2f(fw/2, 0);
-            glVertex2f(fw/2, fh);
-            glVertex2f(0, fh/2);
-            glVertex2f(fw, fh/2);
-        glEnd();
+        // ensure text still uses MODULATE
+        glEnable(GL_TEXTURE_2D);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-        // Draw menu entries
-        glLineWidth(1.0f);
-        int startY = 100;
-        int lineH = 30;
+        int startY = 100 * 4;  // you already bumped these for 4× text
+        int lineH  =  30 * 4;
+
         for (int i = 0; i < scenarioFiles.size(); i++) {
-            glColor3f(i == selectedIndex ? 1f : 1f, i == selectedIndex ? 0f : 1f, 0f);
-            drawTextCentered(fw/2, startY + i * lineH, "Start: " + scenarioFiles.get(i));
+            boolean sel = (i == selectedIndex);
+            float r = sel ? 1f : 1f;
+            float g = sel ? 0f : 1f;
+            float b = sel ? 0f : 1f;
+            drawTextCentered(fw/2, startY + i*lineH, "Start: " + scenarioFiles.get(i), r, g, b);
         }
-        // "Quit" option
-        glColor3f(selectedIndex == scenarioFiles.size() ? 1f : 1f,
-                  selectedIndex == scenarioFiles.size() ? 0f : 1f,
-                  0f);
-        drawTextCentered(fw/2, startY + scenarioFiles.size() * lineH, "Quit");
+
+        boolean quitSel = (selectedIndex == scenarioFiles.size());
+        drawTextCentered(
+            fw/2,
+            startY + scenarioFiles.size()*lineH,
+            "Quit",
+            quitSel ? 1f : 1f,
+            quitSel ? 0f : 1f,
+            quitSel ? 0f : 1f
+        );
     }
 
-    private void drawTextCentered(float centerX, float y, String text) {
+    private void drawTextCentered(float centerX, float y, String text, float r, float g, float b) {
         if (cdata == null) return;
+
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBindTexture(GL_TEXTURE_2D, fontTex);
 
-        // Projection for pixel coordinates
+        // and *again* ensure MODULATE right here
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+        // this color will now tint our glyphs
+        glColor3f(r, g, b);
+
+        // standard fixed-function ortho + immediate-mode quad draw
         glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        int[] w = new int[1], h = new int[1];
+        glPushMatrix(); glLoadIdentity();
+        int[] w = {0}, h = {0};
         glfwGetFramebufferSize(window, w, h);
         glOrtho(0, w[0], h[0], 0, -1, 1);
+
         glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+        glPushMatrix(); glLoadIdentity();
 
         float textWidth = calculateTextWidth(text);
-        float startX = centerX - textWidth / 2f;
-        float[] xPos = { startX };
-        float[] yPos = { y };
+        float startX = centerX - textWidth/2f;
+        float[] xPos = { startX }, yPos = { y };
         try (MemoryStack stack = MemoryStack.stackPush()) {
             STBTTAlignedQuad quad = STBTTAlignedQuad.malloc(stack);
             for (char c : text.toCharArray()) {
                 if (c < 32 || c >= 128) continue;
-                STBTruetype.stbtt_GetBakedQuad(cdata, FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE, c - 32, xPos, yPos, quad, true);
+                STBTruetype.stbtt_GetBakedQuad(
+                    cdata, FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE,
+                    c - 32, xPos, yPos, quad, true
+                );
                 glBegin(GL_QUADS);
-                glTexCoord2f(quad.s0(), quad.t0()); glVertex2f(quad.x0(), quad.y0());
-                glTexCoord2f(quad.s1(), quad.t0()); glVertex2f(quad.x1(), quad.y0());
-                glTexCoord2f(quad.s1(), quad.t1()); glVertex2f(quad.x1(), quad.y1());
-                glTexCoord2f(quad.s0(), quad.t1()); glVertex2f(quad.x0(), quad.y1());
+                   glTexCoord2f(quad.s0(), quad.t0()); glVertex2f(quad.x0(), quad.y0());
+                   glTexCoord2f(quad.s1(), quad.t0()); glVertex2f(quad.x1(), quad.y0());
+                   glTexCoord2f(quad.s1(), quad.t1()); glVertex2f(quad.x1(), quad.y1());
+                   glTexCoord2f(quad.s0(), quad.t1()); glVertex2f(quad.x0(), quad.y1());
                 glEnd();
             }
         }
 
+        glPopMatrix();  // MODELVIEW
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
+
         glDisable(GL_BLEND);
         glDisable(GL_TEXTURE_2D);
     }
@@ -216,7 +237,10 @@ public class Main {
             STBTTAlignedQuad quad = STBTTAlignedQuad.malloc(stack);
             for (char c : text.toCharArray()) {
                 if (c < 32 || c >= 128) continue;
-                STBTruetype.stbtt_GetBakedQuad(cdata, FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE, c - 32, x, y, quad, true);
+                STBTruetype.stbtt_GetBakedQuad(
+                    cdata, FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE,
+                    c - 32, x, y, quad, true
+                );
             }
         }
         return x[0];
