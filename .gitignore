@@ -4,3 +4,5 @@ demo/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFi
 demo/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst
 ChatGPT_Notes.txt
 .vscode/settings.json
+demo/target/maven-status/maven-compiler-plugin/testCompile/
+demo/target/surefire-reports/
