@@ -6,3 +6,6 @@ ChatGPT_Notes.txt
 .vscode/settings.json
 demo/target/maven-status/maven-compiler-plugin/testCompile/
 demo/target/surefire-reports/
+demo/target/test-classes/com/ensea_java_final/
+demo/target/test-classes/org/lwjgl/opengl/GL11.class
+demo/diagram/
