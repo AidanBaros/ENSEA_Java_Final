@@ -20,6 +20,8 @@ jobs:
 
       - name: Build and generate UML diagrams
         run: mvn clean generate-sources generate-resources
+        working-directory: /
+
       
       - name: Add cache-busting query to README
         run: |
