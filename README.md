@@ -32,7 +32,7 @@ Make a circle focused physics simulator.
         - Color
 
 ## UML Diagram
-![UML Diagram](diagram/class-diagram.png?raw=true&v=<SHA>)
+![UML Diagram](demo/diagram/uml-diagram.png?raw=true&v=<SHA>)
 
 ## Main Ideas brainstormed so far:
 - Physics simulator
