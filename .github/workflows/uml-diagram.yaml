@@ -51,3 +51,10 @@ jobs:
             git commit -m "Add UML diagram to README [auto]" || echo "No changes to commit"
             git push || echo "No changes to push"
           fi
+
+      - name: Verify UML diagram image exists after push
+        run: |
+          if [ ! -f demo/diagram/uml-diagram.png ]; then
+            echo "ERROR: UML diagram image not found after push!"
+            exit 1
+          fi
