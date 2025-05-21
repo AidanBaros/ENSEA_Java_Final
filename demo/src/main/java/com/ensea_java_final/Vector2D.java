@@ -16,19 +16,36 @@ public class Vector2D {
         return new Vector2D(this.x - v.x, this.y - v.y);
     }
 
-    public Vector2D scale(double scalar) {
+    public Vector2D scale(Double scalar) {
         return new Vector2D(this.x * scalar, this.y * scalar);
     }
 
-    public double magnitude() {
+    public Vector2D scale(Vector2D scalar) {
+        return new Vector2D(this.x * scalar.x, this.y * scalar.y);
+    }
+
+    public Double magnitude() {
         return Math.sqrt(x * x + y * y);
     }
 
     public Vector2D normalize() {
-        double mag = magnitude();
+        Double mag = magnitude();
         if (mag == 0) return new Vector2D(0.0, 0.0);
         return new Vector2D(x / mag, y / mag);
     }
 
-    
+    public Double distance(Vector2D other) {
+        Double dx = this.x - other.x;
+        Double dy = this.y - other.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    public Double dot(Vector2D other) {
+        return this.x * other.x + this.y * other.y;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ")";
+    }
 }
