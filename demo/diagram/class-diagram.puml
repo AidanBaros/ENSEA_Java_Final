@@ -1,0 +1,106 @@
+@startuml
+
+class com.ensea_java_final.Body {
+	{field} -b : float
+	{field} +fixed : Boolean
+	{field} -g : float
+	{field} -isColliding : Boolean
+	{field} +mass : Double
+	{field} -r : float
+	{field} +size : Double
+	{field} -textureId : Integer
+	{field} -texturePath : String
+	{method} +draw () : void
+	{method}  {static} +drawCircle ( paramfloat1 : float , paramfloat2 : float , paramfloat3 : float , paramint4 : int ) : void
+	{method}  {static} +drawTexturedCircle ( paramfloat1 : float , paramfloat2 : float , paramfloat3 : float , paramint4 : int , paramint5 : int ) : void
+	{method} +isColliding () : Boolean
+	{method}  {static} -loadTexture ( paramString1 : String ) : int
+	{method} +move ( paramVector2D1 : com.ensea_java_final.Vector2D ) : void
+	{method} +setColliding ( paramBoolean1 : Boolean ) : void
+	{method} +setColor ( paramfloat1 : float , paramfloat2 : float , paramfloat3 : float ) : void
+	{method} +setTexture ( paramString1 : String ) : void
+}
+
+
+class com.ensea_java_final.Body$Builder {
+	{field} -b : float
+	{field} -fixed : Boolean
+	{field} -g : float
+	{field} -isColliding : Boolean
+	{field} -mass : Double
+	{field} -r : float
+	{field} -size : Double
+	{field} -texturePath : String
+	{field} -vx : Double
+	{field} -vy : Double
+	{field} -x : Double
+	{field} -y : Double
+	{method} +build () : com.ensea_java_final.Body
+	{method} +color ( paramfloat1 : float , paramfloat2 : float , paramfloat3 : float ) : com.ensea_java_final.Body$Builder
+	{method} +fixed ( paramBoolean1 : Boolean ) : com.ensea_java_final.Body$Builder
+	{method} +mass ( paramDouble1 : Double ) : com.ensea_java_final.Body$Builder
+	{method} +position ( paramDouble1 : Double , paramDouble2 : Double ) : com.ensea_java_final.Body$Builder
+	{method} +size ( paramDouble1 : Double ) : com.ensea_java_final.Body$Builder
+	{method} +texture ( paramString1 : String ) : com.ensea_java_final.Body$Builder
+	{method} +velocity ( paramDouble1 : Double , paramDouble2 : Double ) : com.ensea_java_final.Body$Builder
+}
+
+
+class com.ensea_java_final.Main {
+	{field} -window : long
+	{method} -loop () : void
+	{method}  {static} +main ( paramString;1 : [Ljava.lang.String; ) : void
+	{method} +run () : void
+}
+
+
+class com.ensea_java_final.PhysicsEngine {
+	{field} -gravityDict : java.util.Dictionary
+	{field} -gravityType : String
+	{field} -simulationDeltaT : Double
+	{method} +applyGravity ( paramBoolean1 : Boolean , paramDouble2 : Double ) : void
+	{method} +bodyGravity ( paramBody1 : com.ensea_java_final.Body , paramBody2 : com.ensea_java_final.Body , paramDouble3 : Double ) : void
+	{method} +directionalGravity ( paramBody1 : com.ensea_java_final.Body , paramDouble2 : Double ) : void
+	{method} +moveBodies () : void
+	{method} +resolveCollisions () : void
+	{method} +update () : void
+}
+
+
+class com.ensea_java_final.Vector2D {
+	{field} +x : Double
+	{field} +y : Double
+	{method} +add ( paramVector2D1 : com.ensea_java_final.Vector2D ) : com.ensea_java_final.Vector2D
+	{method} +distance ( paramVector2D1 : com.ensea_java_final.Vector2D ) : Double
+	{method} +dot ( paramVector2D1 : com.ensea_java_final.Vector2D ) : Double
+	{method} +magnitude () : Double
+	{method} +normalize () : com.ensea_java_final.Vector2D
+	{method} +scale ( paramDouble1 : Double ) : com.ensea_java_final.Vector2D
+	{method} +scale ( paramVector2D1 : com.ensea_java_final.Vector2D ) : com.ensea_java_final.Vector2D
+	{method} +subtract ( paramVector2D1 : com.ensea_java_final.Vector2D ) : com.ensea_java_final.Vector2D
+}
+
+
+class com.ensea_java_final.WindowManager {
+	{field} {static} +BOTTOM_BOUND : float
+	{field} {static} +LEFT_BOUND : float
+	{field} {static} +RIGHT_BOUND : float
+	{field} {static} +TOP_BOUND : float
+	{field} {static} -window : long
+	{method}  {static} +cleanup () : void
+	{method}  {static} +init ( paramint1 : int , paramint2 : int , paramString3 : String ) : void
+	{method}  {static} +update () : void
+}
+
+
+
+
+com.ensea_java_final.Body -->  com.ensea_java_final.Vector2D : acceleration
+com.ensea_java_final.Body -->  com.ensea_java_final.Vector2D : position
+com.ensea_java_final.Body -->  com.ensea_java_final.Vector2D : velocity
+com.ensea_java_final.Main "1" o-- "0..*"  com.ensea_java_final.Body : bodies
+com.ensea_java_final.Main -->  com.ensea_java_final.PhysicsEngine : physicsEngine
+com.ensea_java_final.PhysicsEngine "1" o-- "0..*"  com.ensea_java_final.Body : bodies
+
+
+@enduml
