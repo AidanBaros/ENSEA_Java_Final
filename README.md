@@ -50,3 +50,8 @@ Make a circle focused physics simulator.
 - Weight room app
 - Recipes app
 
+
+## UML Class Diagram
+
+![UML Diagram](diagram/uml-diagram.png)
+
