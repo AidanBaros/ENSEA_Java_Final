@@ -17,29 +17,43 @@ public class WindowManager {
         if (!glfwInit())
             throw new IllegalStateException("Unable to initialize GLFW");
 
+        // Window hints before creation
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-        glfwWindowHint(GLFW_SAMPLES, 4); // 4x anti-aliasing
+        glfwWindowHint(GLFW_SAMPLES, 4);  // 4x MSAA
 
-        window = glfwCreateWindow(width, height, title, 0, 0);
+        // Determine maximum screen size
+        long primary = glfwGetPrimaryMonitor();
+        GLFWVidMode mode = glfwGetVideoMode(primary);
+        int screenW = mode.width();
+        int screenH = mode.height();
+
+        // Create a windowed mode window at maximum resolution
+        window = glfwCreateWindow(screenW, screenH, title, 0, 0);
         if (window == 0)
             throw new RuntimeException("Failed to create GLFW window");
 
-        GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-        glfwSetWindowPos(window,
-                (vidmode.width() - width) / 2,
-                (vidmode.height() - height) / 2);
+        // Position at top-left corner
+        glfwSetWindowPos(window, 0, 0);
 
         glfwMakeContextCurrent(window);
         GL.createCapabilities();
-        glEnable(GL_MULTISAMPLE); // anti-aliasing
+        glEnable(GL_MULTISAMPLE);
 
-        glfwSwapInterval(1);
+        glfwSwapInterval(1);  // V-sync on
         glfwShowWindow(window);
 
-        glViewport(0, 0, width, height);
-        float aspect = (float) width / height;
+        // Set up initial viewport and projection
+        resizeViewport(screenW, screenH);
+
+        // Handle window resize
+        glfwSetFramebufferSizeCallback(window, (win, w, h) -> resizeViewport(w, h));
+    }
+
+    private static void resizeViewport(int w, int h) {
+        glViewport(0, 0, w, h);
+        float aspect = (float) w / h;
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         if (aspect >= 1.0f) {
@@ -53,35 +67,10 @@ public class WindowManager {
             LEFT_BOUND   = -1.0f;
             RIGHT_BOUND  =  1.0f;
             BOTTOM_BOUND = -1.0f/aspect;
-            TOP_BOUND    =  1.0f/aspect;        
+            TOP_BOUND    =  1.0f/aspect;
         }
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-
-        glfwSetFramebufferSizeCallback(window, (win, w, h) -> {
-            glViewport(0, 0, w, h);
-            
-            float ar = (float) w / h;  
-            glMatrixMode(GL_PROJECTION);  
-            glLoadIdentity(); 
-            if (ar >= 1.0f) {
-                glOrtho(-ar, ar, -1.0, 1.0, -1.0, 1.0);
-                LEFT_BOUND   = -ar;
-                RIGHT_BOUND  =  ar;
-                BOTTOM_BOUND = -1.0f;
-                TOP_BOUND    =  1.0f;
-
-            } else {
-                glOrtho(-1.0, 1.0, -1.0f/ar, 1.0f/ar, -1.0, 1.0);
-                LEFT_BOUND   = -1.0f;
-                RIGHT_BOUND  =  1.0f;
-                BOTTOM_BOUND = -1.0f/ar;
-                TOP_BOUND    =  1.0f/ar;
-
-            }
-            glMatrixMode(GL_MODELVIEW); 
-        });
-        
     }
 
     public static long getWindow() {
