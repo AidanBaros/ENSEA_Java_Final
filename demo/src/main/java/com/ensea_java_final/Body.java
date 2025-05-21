@@ -19,6 +19,17 @@ public class Body {
     private String texturePath = null;
     private Boolean isColliding;
 
+    public enum ShapeType { CIRCLE, RECTANGLE, HOLLOW_CIRCLE }
+    private ShapeType shape = ShapeType.CIRCLE;
+    // Rectangle properties
+    private Double width = null, height = null;
+    // Hollow circle properties
+    private Double innerRadius = null, missingAngleStart = null, missingAngleExtent = null;
+    // Rotation (in radians)
+    private Double rotation = 0.0;
+    // Environment flag
+    private Boolean isEnvironment = false;
+
     // Private constructor: enforce use of Builder
     private Body(Builder builder) {
         this.mass = builder.mass;
@@ -30,6 +41,14 @@ public class Body {
         this.b = builder.b;
         this.acceleration = new Vector2D(0.0, 0.0);
         this.fixed = builder.fixed;
+        this.shape = builder.shape;
+        this.width = builder.width;
+        this.height = builder.height;
+        this.innerRadius = builder.innerRadius;
+        this.missingAngleStart = builder.missingAngleStart;
+        this.missingAngleExtent = builder.missingAngleExtent;
+        this.rotation = builder.rotation;
+        this.isEnvironment = builder.isEnvironment;
         if (builder.texturePath != null) {
             this.texturePath = builder.texturePath;
             this.textureId = loadTexture(builder.texturePath);
@@ -46,6 +65,14 @@ public class Body {
     public Integer getTextureId() { return textureId; }
     public String getTexturePath() { return texturePath; }
     public Boolean isColliding() {return isColliding; }
+    public ShapeType getShape() { return shape; }
+    public Double getWidth() { return width; }
+    public Double getHeight() { return height; }
+    public Double getInnerRadius() { return innerRadius; }
+    public Double getMissingAngleStart() { return missingAngleStart; }
+    public Double getMissingAngleExtent() { return missingAngleExtent; }
+    public Double getRotation() { return rotation; }
+    public Boolean isEnvironment() { return isEnvironment; }
 
     // --- Setters ---
     public void setMass(Double mass) {this.mass = mass;}
@@ -63,23 +90,47 @@ public class Body {
         this.texturePath = path;
     }
     public void setColliding(Boolean colliding) {this.isColliding = colliding; }
-
+    public void setShape(ShapeType shape) { this.shape = shape; }
+    public void setWidth(Double width) { this.width = width; }
+    public void setHeight(Double height) { this.height = height; }
+    public void setInnerRadius(Double innerRadius) { this.innerRadius = innerRadius; }
+    public void setMissingAngleStart(Double start) { this.missingAngleStart = start; }
+    public void setMissingAngleExtent(Double extent) { this.missingAngleExtent = extent; }
+    public void setRotation(Double rotation) { this.rotation = rotation; }
+    public void setEnvironment(Boolean env) { this.isEnvironment = env; }
 
     // --- Functions ---
     public void move(Vector2D position){
-        if (!fixed){
+        if (!fixed && !isEnvironment){
             this.position = position;
         }
     }
 
     public void draw() {
-        glEnable(GL_MULTISAMPLE); // Enable multisampling for anti-aliasing
-        if (textureId != null) {
-            drawTexturedCircle(this.position.x.floatValue(), this.position.y.floatValue(), this.size.floatValue(), 64, textureId);
-        } else {
-            glColor3f(r, g, b);
-            drawCircle(this.position.x.floatValue(), this.position.y.floatValue(), this.size.floatValue(), 64);
+        glEnable(GL_MULTISAMPLE);
+        glPushMatrix();
+        glTranslated(position.x, position.y, 0);
+        glRotated(Math.toDegrees(rotation), 0, 0, 1);
+        switch (shape) {
+            case RECTANGLE:
+                glColor3f(r, g, b);
+                drawRectangle(0, 0, width.floatValue(), height.floatValue());
+                break;
+            case HOLLOW_CIRCLE:
+                glColor3f(r, g, b);
+                drawHollowCircle(0, 0, size.floatValue(), innerRadius.floatValue(), 64, missingAngleStart, missingAngleExtent);
+                break;
+            case CIRCLE:
+            default:
+                if (textureId != null) {
+                    drawTexturedCircle(0, 0, size.floatValue(), 64, textureId);
+                } else {
+                    glColor3f(r, g, b);
+                    drawCircle(0, 0, size.floatValue(), 64);
+                }
+                break;
         }
+        glPopMatrix();
         glDisable(GL_MULTISAMPLE);
     }
 
@@ -122,6 +173,31 @@ public class Body {
         glDisable(GL_TEXTURE_2D);
     }
 
+    public static void drawRectangle(float cx, float cy, float w, float h) {
+        glBegin(GL_QUADS);
+        glVertex2f(cx - w/2, cy - h/2);
+        glVertex2f(cx + w/2, cy - h/2);
+        glVertex2f(cx + w/2, cy + h/2);
+        glVertex2f(cx - w/2, cy + h/2);
+        glEnd();
+    }
+
+    public static void drawHollowCircle(float cx, float cy, float outerR, float innerR, int segments, Double missingStart, Double missingExtent) {
+        double start = missingStart != null ? missingStart : 0.0;
+        double extent = missingExtent != null ? missingExtent : 0.0;
+        double step = 2.0 * Math.PI / segments;
+        double end = 2 * Math.PI;
+        if (extent > 0) {
+            end = start + (2 * Math.PI - extent);
+        }
+        glBegin(GL_TRIANGLE_STRIP);
+        for (double angle = start; angle <= end; angle += step) {
+            glVertex2f((float)Math.cos(angle) * outerR, (float)Math.sin(angle) * outerR);
+            glVertex2f((float)Math.cos(angle) * innerR, (float)Math.sin(angle) * innerR);
+        }
+        glEnd();
+    }
+
     private static int loadTexture(String path) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             // Flip image vertically so textures appear right-side up in OpenGL
@@ -158,6 +234,11 @@ public class Body {
         private float r = 1.0f, g = 1.0f, b = 1.0f; // default to white if not set
         private String texturePath = null;
         private Boolean isColliding = false;
+        private ShapeType shape = ShapeType.CIRCLE;
+        private Double width = null, height = null;
+        private Double innerRadius = null, missingAngleStart = null, missingAngleExtent = null;
+        private Double rotation = 0.0;
+        private Boolean isEnvironment = false;
 
         public Builder mass(Double mass) {
             this.mass = mass;
@@ -195,6 +276,33 @@ public class Body {
 
         public Builder fixed(Boolean fixed) {
             this.fixed = fixed;
+            return this;
+        }
+
+        public Builder shape(ShapeType shape) {
+            this.shape = shape;
+            return this;
+        }
+        public Builder rectangle(Double width, Double height) {
+            this.shape = ShapeType.RECTANGLE;
+            this.width = width;
+            this.height = height;
+            return this;
+        }
+        public Builder hollowCircle(Double innerRadius, Double missingAngleStart, Double missingAngleExtent) {
+            this.shape = ShapeType.HOLLOW_CIRCLE;
+            this.innerRadius = innerRadius;
+            this.missingAngleStart = missingAngleStart;
+            this.missingAngleExtent = missingAngleExtent;
+            return this;
+        }
+        public Builder rotation(Double rotation) {
+            this.rotation = rotation;
+            return this;
+        }
+        public Builder environment(Boolean env) {
+            this.isEnvironment = env;
+            this.fixed = true;
             return this;
         }
 

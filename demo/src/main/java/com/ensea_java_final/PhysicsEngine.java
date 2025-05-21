@@ -53,10 +53,18 @@ public class PhysicsEngine {
             Body bodyA = bodies.get(i);
             for (int j = i + 1; j < bodies.size(); j++) {
                 Body bodyB = bodies.get(j);
-                double distance = bodyA.getPosition().distance(bodyB.getPosition());
-                double collisionDistance = bodyA.getSize() + bodyB.getSize();
-
-                if (distance <= collisionDistance) {
+                // Simple bounding check for all shapes
+                boolean collides = false;
+                if (bodyA.getShape() == Body.ShapeType.RECTANGLE || bodyB.getShape() == Body.ShapeType.RECTANGLE) {
+                    // Use AABB for rectangles
+                    collides = rectsOverlap(bodyA, bodyB);
+                } else {
+                    // Use circle bounding for others
+                    double distance = bodyA.getPosition().distance(bodyB.getPosition());
+                    double collisionDistance = bodyA.getSize() + bodyB.getSize();
+                    collides = (distance <= collisionDistance);
+                }
+                if (collides) {
                     collisionPairs.add(new CollisionPair(bodyA, bodyB));
                 }
             }
@@ -75,6 +83,27 @@ public class PhysicsEngine {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private boolean rectsOverlap(Body a, Body b) {
+        // Only supports axis-aligned rectangles for now
+        if (a.getShape() == Body.ShapeType.RECTANGLE && b.getShape() == Body.ShapeType.RECTANGLE) {
+            double ax1 = a.getPosition().x - a.getWidth()/2, ax2 = a.getPosition().x + a.getWidth()/2;
+            double ay1 = a.getPosition().y - a.getHeight()/2, ay2 = a.getPosition().y + a.getHeight()/2;
+            double bx1 = b.getPosition().x - b.getWidth()/2, bx2 = b.getPosition().x + b.getWidth()/2;
+            double by1 = b.getPosition().y - b.getHeight()/2, by2 = b.getPosition().y + b.getHeight()/2;
+            return (ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1);
+        }
+        // Rectangle vs circle
+        Body rect = a.getShape() == Body.ShapeType.RECTANGLE ? a : b;
+        Body circ = a.getShape() == Body.ShapeType.RECTANGLE ? b : a;
+        double rx = rect.getPosition().x, ry = rect.getPosition().y;
+        double rw = rect.getWidth()/2, rh = rect.getHeight()/2;
+        double cx = circ.getPosition().x, cy = circ.getPosition().y, cr = circ.getSize();
+        double closestX = Math.max(rx - rw, Math.min(cx, rx + rw));
+        double closestY = Math.max(ry - rh, Math.min(cy, ry + rh));
+        double dx = cx - closestX, dy = cy - closestY;
+        return (dx*dx + dy*dy) <= (cr*cr);
     }
 
     private void resolveCollision(Body bodyA, Body bodyB) {
@@ -128,7 +157,9 @@ public class PhysicsEngine {
 
         for (Body body : bodies) {
             tasks.add(() -> {
-                body.move(body.getPosition().add(body.getVelocity().scale(adjustedDeltaT)));
+                if (!body.isEnvironment()) {
+                    body.move(body.getPosition().add(body.getVelocity().scale(adjustedDeltaT)));
+                }
                 return null;
             });
         }
@@ -141,43 +172,46 @@ public class PhysicsEngine {
     }
 
     public void applyGravity(boolean isNBody, double gravity) {
-    if (!isNBody) {
-        ArrayList<Callable<Void>> tasks = new ArrayList<>();
-        for (Body body : bodies) {
-            tasks.add(() -> {
-                directionalGravity(body, gravity);
-                return null;
-            });
-        }
-
-        try {
-            executor.invokeAll(tasks);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-    } else {
-        ArrayList<Callable<Void>> tasks = new ArrayList<>();
-
-        for (int i = 0; i < bodies.size(); i++) {
-            Body bodyA = bodies.get(i);
-            for (int j = i + 1; j < bodies.size(); j++) {
-                Body bodyB = bodies.get(j);
-
+        if (!isNBody) {
+            ArrayList<Callable<Void>> tasks = new ArrayList<>();
+            for (Body body : bodies) {
                 tasks.add(() -> {
-                    bodyGravity(bodyA, bodyB, gravity);
+                    if (!body.isEnvironment()) {
+                        directionalGravity(body, gravity);
+                    }
                     return null;
                 });
             }
-        }
 
-        try {
-            executor.invokeAll(tasks);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            try {
+                executor.invokeAll(tasks);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+        } else {
+            ArrayList<Callable<Void>> tasks = new ArrayList<>();
+
+            for (int i = 0; i < bodies.size(); i++) {
+                Body bodyA = bodies.get(i);
+                for (int j = i + 1; j < bodies.size(); j++) {
+                    Body bodyB = bodies.get(j);
+                    tasks.add(() -> {
+                        if (!bodyA.isEnvironment() && !bodyB.isEnvironment()) {
+                            bodyGravity(bodyA, bodyB, gravity);
+                        }
+                        return null;
+                    });
+                }
+            }
+
+            try {
+                executor.invokeAll(tasks);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
-}
 
     public void bodyGravity(Body bodyA, Body bodyB, Double gravity){
         Vector2D direction = bodyB.getPosition().subtract(bodyA.getPosition());

@@ -19,7 +19,7 @@ public class Main {
     }
 
     public void run() {
-        String scenarioPath = "scenario/test2.json";
+        String scenarioPath = "scenario/test_shapes.json";
         WindowManager.init(800, 600, "Physics Simulation");
         window = WindowManager.getWindow();
 
@@ -44,6 +44,7 @@ public class Main {
                         bodyNode.get("velocity").get(1).asDouble()
                     )
                     .fixed(bodyNode.has("fixed") && bodyNode.get("fixed").asBoolean());
+
                 if (bodyNode.has("color")) {
                     builder.color(
                         (float) bodyNode.get("color").get(0).asDouble(),
@@ -53,6 +54,27 @@ public class Main {
                 }
                 if (bodyNode.has("texturePath")) {
                     builder.texture(bodyNode.get("texturePath").asText());
+                }
+                if (bodyNode.has("shape")) {
+                    String shape = bodyNode.get("shape").asText();
+                    if (shape.equalsIgnoreCase("rectangle")) {
+                        double width = bodyNode.has("width") ? bodyNode.get("width").asDouble() : 0.2;
+                        double height = bodyNode.has("height") ? bodyNode.get("height").asDouble() : 0.2;
+                        builder.rectangle(width, height);
+                    } else if (shape.equalsIgnoreCase("hollow_circle")) {
+                        double innerRadius = bodyNode.has("innerRadius") ? bodyNode.get("innerRadius").asDouble() : 0.05;
+                        double missingStart = bodyNode.has("missingAngleStart") ? bodyNode.get("missingAngleStart").asDouble() : 0.0;
+                        double missingExtent = bodyNode.has("missingAngleExtent") ? bodyNode.get("missingAngleExtent").asDouble() : 0.0;
+                        builder.hollowCircle(innerRadius, missingStart, missingExtent);
+                    } else {
+                        builder.shape(Body.ShapeType.CIRCLE);
+                    }
+                }
+                if (bodyNode.has("rotation")) {
+                    builder.rotation(bodyNode.get("rotation").asDouble());
+                }
+                if (bodyNode.has("environment") && bodyNode.get("environment").asBoolean()) {
+                    builder.environment(true);
                 }
                 bodies.add(builder.build());
             }
