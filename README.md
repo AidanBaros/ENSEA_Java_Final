@@ -12,6 +12,30 @@ Make a circle focused physics simulator.
     - Ensure `<properties>` of `pom.xml` contains `<lwjgl.natives>natives-macos-arm64</lwjgl.natives>` to ensure the correct lwjgl libraries are downloaded in the compilation process
     - Compile and run the project with `./run.sh`
 
+## JSON Formatting Specification
+Simulation scenarios are encoded using JSON files. The JSON files are located in demo/scenario/. The scenario file includes simulation parameters and body data.
+
+### JSON Fields
+| Field           | Type     | Required | Description                                                                 |
+|-----------------|----------|----------|-----------------------------------------------------------------------------|
+| simulationName  | string   | No       | Name of the simulation (used as window title).                              |
+| gravityType     | string   | No       | Type of gravity to use. Options: `"game"`, `"standard"`, `"earth"`. Defaults to `"game"`. |
+| bodies          | array    | Yes      | List of body objects (see below).                                           |
+
+### Body Object Fields
+
+| Field        | Type     | Required | Description                                                                 |
+|--------------|----------|----------|-----------------------------------------------------------------------------|
+| mass         | number   | Yes      | Mass of the body.                                                           |
+| size         | number   | Yes      | Size (radius) of the body.                                                  |
+| position     | array    | Yes      | `[x, y]` position of the body (2 numbers).                                  |
+| velocity     | array    | Yes      | `[vx, vy]` initial velocity (2 numbers).                                    |
+| color        | array    | No       | `[r, g, b]` color (each 0.0–1.0). If omitted, defaults to white or texture. |
+| fixed        | boolean  | No       | If true, body does not move. Defaults to `false`.                           |
+| texturePath  | string   | No       | Path to a texture image for the body. If omitted, uses color.               |
+
+---
+
 ## Primary Features
 - Physics Sim
     - Environment 
