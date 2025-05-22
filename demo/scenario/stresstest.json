@@ -1,0 +1,247 @@
+{
+  "simulationName": "Four bodies",
+  "gravityType": "game",
+  "bodies": [
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.0, 0.0],
+      "velocity": [1.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.5, 0.0],
+      "velocity": [0.0, 1.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.0, 0.5],
+      "velocity": [0.0, -1.0],
+      "texturePath": "texture/ball.png"
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.5, 0.5],
+      "velocity": [-1.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.142857, 0.142857],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.285714, 0.142857],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 100.0,
+      "size": 0.1,
+      "position": [0.428571, 0.142857],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.571429, 0.142857],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.714286, 0.142857],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.857143, 0.142857],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.142857, 0.285714],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.285714, 0.285714],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.428571, 0.285714],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.571429, 0.285714],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.714286, 0.285714],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.857143, 0.285714],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.142857, 0.428571],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.285714, 0.428571],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.428571, 0.428571],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.571429, 0.428571],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.714286, 0.428571],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.857143, 0.428571],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.142857, 0.571429],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.285714, 0.571429],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.428571, 0.571429],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.571429, 0.571429],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.714286, 0.571429],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.857143, 0.571429],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.142857, 0.714286],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.285714, 0.714286],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.428571, 0.714286],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.571429, 0.714286],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.714286, 0.714286],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.857143, 0.714286],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.142857, 0.857143],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.285714, 0.857143],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.428571, 0.857143],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.571429, 0.857143],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.714286, 0.857143],
+      "velocity": [0.0, 0.0]
+    },
+    {
+      "mass": 1.0,
+      "size": 0.01,
+      "position": [0.857143, 0.857143],
+      "velocity": [0.0, 0.0]
+    }
+  ]
+}
