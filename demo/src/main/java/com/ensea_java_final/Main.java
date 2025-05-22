@@ -2,7 +2,7 @@ package com.ensea_java_final;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL33.*; // For swizzle constants
+import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.opengl.GL.createCapabilities;
 
 import java.util.ArrayList;
@@ -53,13 +53,11 @@ public class Main {
 
             ByteBuffer bitmap = BufferUtils.createByteBuffer(FONT_TEXTURE_SIZE * FONT_TEXTURE_SIZE);
             cdata = STBTTBakedChar.malloc(96);
-            // bake at 128px height (4× your original 32px)
             STBTruetype.stbtt_BakeFontBitmap(ttf, 128, bitmap, FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE, 32, cdata);
 
             fontTex = glGenTextures();
             glBindTexture(GL_TEXTURE_2D, fontTex);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, FONT_TEXTURE_SIZE, FONT_TEXTURE_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, bitmap);
-            // swizzle so that our red channel is used for all color and alpha channels
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
@@ -80,7 +78,6 @@ public class Main {
 
     public void run() {
         String scenarioPath = "scenario/nbody.json";
-        // *** 1) Force compatibility profile so fixed-function calls work ***
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
@@ -99,7 +96,6 @@ public class Main {
 
     private void loop() {
         while (!glfwWindowShouldClose(window)) {
-            // *** 2) Re-apply MODULATE every frame before anything else ***
             glEnable(GL_TEXTURE_2D);
             glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
@@ -150,14 +146,10 @@ public class Main {
         glfwGetFramebufferSize(window, w, h);
         float fw = w[0], fh = h[0];
 
-        // draw grid & crosshair (unchanged)...
-        // ...
-
-        // ensure text still uses MODULATE
         glEnable(GL_TEXTURE_2D);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-        int startY = 100 * 4;  // you already bumped these for 4× text
+        int startY = 100 * 4;
         int lineH  =  30 * 4;
 
         for (int i = 0; i < scenarioFiles.size(); i++) {
@@ -187,13 +179,10 @@ public class Main {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBindTexture(GL_TEXTURE_2D, fontTex);
 
-        // and *again* ensure MODULATE right here
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-        // this color will now tint our glyphs
         glColor3f(r, g, b);
 
-        // standard fixed-function ortho + immediate-mode quad draw
         glMatrixMode(GL_PROJECTION);
         glPushMatrix(); glLoadIdentity();
         int[] w = {0}, h = {0};
@@ -223,7 +212,7 @@ public class Main {
             }
         }
 
-        glPopMatrix();  // MODELVIEW
+        glPopMatrix();
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
