@@ -75,10 +75,10 @@ public class WindowManagerTest {
             gl.when(org.lwjgl.opengl.GL::createCapabilities).thenAnswer(inv -> null);
 
             // we are calling init() with a 400 x 300 window (aspect = 1.333)
-            WindowManager.init(400, 300, "test");
+            WindowManager.init(800, 600, "test");
 
             // check the computed projection bounds are correct
-            float aspect = 400f / 300f;
+            float aspect = 800f / 600f;
 
             // this checks the aspect ratio (width / height
             // checks if -1.33 is the left bound), 1.33 is right bound, -1 bottom bound, 1

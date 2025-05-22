@@ -30,7 +30,8 @@ public class Body {
         this.b = builder.b;
         this.acceleration = new Vector2D(0.0, 0.0);
         this.fixed = builder.fixed;
-        if (builder.texturePath != null) {
+        // Only load texture if path is not null and not empty
+        if (builder.texturePath != null && !builder.texturePath.isEmpty()) {
             this.texturePath = builder.texturePath;
             this.textureId = loadTexture(builder.texturePath);
         }
@@ -59,8 +60,14 @@ public class Body {
         if (this.textureId != null) {
             glDeleteTextures(this.textureId);
         }
-        this.textureId = loadTexture(path);
-        this.texturePath = path;
+        // Only load texture if path is not null and not empty
+        if (path != null && !path.isEmpty()) {
+            this.textureId = loadTexture(path);
+            this.texturePath = path;
+        } else {
+            this.textureId = null;
+            this.texturePath = null;
+        }
     }
     public void setColliding(Boolean colliding) {this.isColliding = colliding; }
 
