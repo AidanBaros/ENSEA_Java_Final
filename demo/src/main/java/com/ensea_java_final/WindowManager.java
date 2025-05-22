@@ -3,51 +3,53 @@ package com.ensea_java_final;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
+
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 
 public class WindowManager {
     public static float LEFT_BOUND, RIGHT_BOUND, BOTTOM_BOUND, TOP_BOUND;
-
     private static long window;
 
+    /**
+     * Initializes GLFW, creates a window, and sets up OpenGL state.
+     */
     public static void init(int width, int height, String title) {
         GLFWErrorCallback.createPrint(System.err).set();
-        if (!glfwInit())
+        if (!glfwInit()) {
             throw new IllegalStateException("Unable to initialize GLFW");
+        }
 
-        // Window hints before creation
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-        glfwWindowHint(GLFW_SAMPLES, 4);  // 4x MSAA
+        glfwWindowHint(GLFW_SAMPLES, 4);
 
-        // Determine maximum screen size
-        long primary = glfwGetPrimaryMonitor();
-        GLFWVidMode mode = glfwGetVideoMode(primary);
-        int screenW = mode.width();
-        int screenH = mode.height();
+        long monitor = glfwGetPrimaryMonitor();
+        GLFWVidMode mode = glfwGetVideoMode(monitor);
+        int winWidth = (width > 0) ? width : mode.width();
+        int winHeight = (height > 0) ? height : mode.height();
 
-        // Create a windowed mode window at maximum resolution
-        window = glfwCreateWindow(screenW, screenH, title, 0, 0);
-        if (window == 0)
+        window = glfwCreateWindow(winWidth, winHeight, title, 0, 0);
+        if (window == 0) {
             throw new RuntimeException("Failed to create GLFW window");
+        }
 
-        // Position at top-left corner
-        glfwSetWindowPos(window, 0, 0);
+        if (width > 0 && height > 0) {
+            int xPos = (mode.width() - winWidth) / 2;
+            int yPos = (mode.height() - winHeight) / 2;
+            glfwSetWindowPos(window, xPos, yPos);
+        }
 
         glfwMakeContextCurrent(window);
         GL.createCapabilities();
         glEnable(GL_MULTISAMPLE);
 
-        glfwSwapInterval(1);  // V-sync on
+        glfwSwapInterval(1);
         glfwShowWindow(window);
 
-        // Set up initial viewport and projection
-        resizeViewport(screenW, screenH);
-
-        // Handle window resize
+        resizeViewport(winWidth, winHeight);
         glfwSetFramebufferSizeCallback(window, (win, w, h) -> resizeViewport(w, h));
     }
 
@@ -73,15 +75,22 @@ public class WindowManager {
         glLoadIdentity();
     }
 
+    /** @return the GLFW window handle */
     public static long getWindow() {
         return window;
     }
 
+    /**
+     * Swaps color buffers and polls input events.
+     */
     public static void update() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+    /**
+     * Destroys window and terminates GLFW.
+     */
     public static void cleanup() {
         glfwDestroyWindow(window);
         glfwTerminate();

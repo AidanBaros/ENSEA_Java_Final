@@ -1,51 +1,18 @@
 package com.ensea_java_final;
 
 public class Vector2D {
-    public Double x, y;
-
-    public Vector2D(Double x, Double y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public Vector2D add(Vector2D v) {
-        return new Vector2D(this.x + v.x, this.y + v.y);
-    }
-
-    public Vector2D subtract(Vector2D v) {
-        return new Vector2D(this.x - v.x, this.y - v.y);
-    }
-
-    public Vector2D scale(Double scalar) {
-        return new Vector2D(this.x * scalar, this.y * scalar);
-    }
-
-    public Vector2D scale(Vector2D scalar) {
-        return new Vector2D(this.x * scalar.x, this.y * scalar.y);
-    }
-
-    public Double magnitude() {
-        return Math.sqrt(x * x + y * y);
-    }
-
+    private double x, y;
+    public Vector2D(double x, double y) { this.x = x; this.y = y; }
+    public double getX()                { return x; }
+    public double getY()                { return y; }
+    public Vector2D add(Vector2D o)     { return new Vector2D(x + o.x, y + o.y); }
+    public Vector2D subtract(Vector2D o){ return new Vector2D(x - o.x, y - o.y); }
+    public Vector2D scale(double s)     { return new Vector2D(x * s, y * s); }
+    public double magnitude()           { return Math.hypot(x, y); }
+    public double magnitudeSquared()    { return x * x + y * y; }
     public Vector2D normalize() {
-        Double mag = magnitude();
-        if (mag == 0) return new Vector2D(0.0, 0.0);
-        return new Vector2D(x / mag, y / mag);
+        double m = magnitude();
+        return (m > 0) ? scale(1.0 / m) : new Vector2D(0, 0);
     }
-
-    public Double distance(Vector2D other) {
-        Double dx = this.x - other.x;
-        Double dy = this.y - other.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    public Double dot(Vector2D other) {
-        return this.x * other.x + this.y * other.y;
-    }
-
-    @Override
-    public String toString() {
-        return "(" + x + ", " + y + ")";
-    }
+    public double dot(Vector2D o)       { return x * o.x + y * o.y; }
 }
