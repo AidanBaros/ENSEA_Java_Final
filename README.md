@@ -1,4 +1,12 @@
-# ENSEA_Java_Final
+# N-Body Physics Simulation
+
+## Presentation Date
+May 22, 2025
+
+## Authors
+- Aidan Baros
+- Charlie Yonkura
+- Ethan Zhang
 
 ## Project description
 Make a circle focused physics simulator.
@@ -85,9 +93,6 @@ Simulation scenarios are encoded using JSON files. The JSON files are located in
         - Stating position
         - Color
 
-## UML Diagram
-![UML Diagram](demo/diagram/uml-diagram.png?raw=true&v=6f07873)
-
 ## Main Ideas brainstormed so far:
 - Physics simulator
 	- Balls bouncing around in another ball
@@ -99,7 +104,6 @@ Simulation scenarios are encoded using JSON files. The JSON files are located in
 - Calendar + to do list + financing + time stamp + hr tracker + sleep tracker 
 - Sudoku solver
 
-## Secondary Ideas
-- Minecraft mod
-- Weight room app
-- Recipes app
+![UML Diagram](demo/diagram/uml-diagram.png?raw=true&v=6c328dc)
+
+
