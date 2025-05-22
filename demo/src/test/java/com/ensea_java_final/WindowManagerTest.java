@@ -1,5 +1,6 @@
 package com.ensea_java_final;
 
+// taken from lwjgl website 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -21,7 +22,7 @@ import static org.lwjgl.system.MemoryUtil.memAddress;
 
 // GLFW this is window creation and monitoring
 // gl and GL11 they are openGL context and rendering functions
-
+// verify bounds are correct 
 @DisplayName("WindowManager projection maths")
 public class WindowManagerTest {
 
@@ -30,10 +31,12 @@ public class WindowManagerTest {
 
         // MockedStatic<WindowManager> wm = mockStatic(WindowManager.class,
         // CALLS_REAL_METHODS);
+        /// call window without opening a real window
         try (MockedStatic<org.lwjgl.glfw.GLFW> glfw = mockStatic(org.lwjgl.glfw.GLFW.class);
                 MockedStatic<org.lwjgl.opengl.GL> gl = mockStatic(org.lwjgl.opengl.GL.class)) {
             // simulating initialization
             glfw.when(org.lwjgl.glfw.GLFW::glfwInit).thenReturn(true);
+            // this fake successufl glfw opening
 
             // this is simulating creating a window and returning a fake window
             glfw.when(() -> org.lwjgl.glfw.GLFW.glfwCreateWindow(anyInt(), anyInt(), any(CharSequence.class), anyLong(),
@@ -56,13 +59,15 @@ public class WindowManagerTest {
 
             // mode.width(1920).height(1080);
 
+            // GLFW is viewing real memory but mockito cannot mock native/real memory logic
+            // so we create memory
             ByteBuffer buf = BufferUtils.createByteBuffer(GLFWVidMode.SIZEOF);
-            buf.putInt(0, 1920);
-            buf.putInt(4, 1080);
-            buf.putInt(8, 8);
-            buf.putInt(12, 8);
-            buf.putInt(16, 8);
-            buf.putInt(20, 60);
+            buf.putInt(0, 1920); // width
+            buf.putInt(4, 1080); // height
+            buf.putInt(8, 8);  // red
+            buf.putInt(12, 8); // green 
+            buf.putInt(16, 8); // blue
+            buf.putInt(20, 60); // refresh/frame rate  taken from struct
             GLFWVidMode mode = GLFWVidMode.create(memAddress(buf));
 
             glfw.when(() -> org.lwjgl.glfw.GLFW.glfwGetVideoMode(1L)).thenReturn(mode);

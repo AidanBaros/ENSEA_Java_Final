@@ -27,7 +27,7 @@ public class PhysicsEngineTest {
             () -> assertTrue(a.getVelocity().x > 0, "a should accelerate toward b"),
             () -> assertTrue(b.getVelocity().x < 0, "b should accelerate toward a")
         );
-        engine.shutdownExecutor(); // clean up thread
+        engine.shutdownExecutor(); // clean up 
     }
 
     @Test
@@ -38,7 +38,7 @@ public class PhysicsEngineTest {
 
         engine.directionalGravity(p, -9.8);
 
-        assertEquals(-9.8 * 0.001, p.getVelocity().y, 1e-6);
+        assertEquals(-9.8 * 0.001, p.getVelocity().y, 1e-6); // 0.001 is simulation delta t engine
 
         engine.shutdownExecutor(); // clean up
 
@@ -52,9 +52,9 @@ public class PhysicsEngineTest {
         PhysicsEngine engine = new PhysicsEngine(new ArrayList<>(List.of(a,b)));
         engine.resolveCollisions();
 
-        assertTrue(a.getPosition().distance(b.getPosition()) >= a.getSize()+ b.getSize());
+        assertTrue(a.getPosition().distance(b.getPosition()) >= a.getSize()+ b.getSize()); // check they do not overlap their distance > combined radii
 
-        engine.shutdownExecutor(); // clean up threads not necessary
+        engine.shutdownExecutor(); // 
 
     }
 

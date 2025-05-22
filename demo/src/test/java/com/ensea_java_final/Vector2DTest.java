@@ -1,13 +1,9 @@
 package com.ensea_java_final;
 
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-
-import java.beans.Transient;
-
 
 @DisplayName("Vector2D math")
 public class Vector2DTest {
@@ -23,7 +19,6 @@ public class Vector2DTest {
         assertEquals(6.0, r.y);
     }
 
-
     @Test
     void subtract() {
         Vector2D v1 = new Vector2D(5.0, 7.0);
@@ -35,25 +30,22 @@ public class Vector2DTest {
         assertEquals(6.0, r.y);
     }
 
-
     @Test
     void scale() {
         Vector2D v = new Vector2D(-2.0, 3.0);
-        
+
         Vector2D r = v.scale(4.0);
 
         assertEquals(-8.0, r.x);
         assertEquals(12.0, r.y);
     }
 
-
     @Test
     void magnitude() {
-        // when using float point math, its not exact so we use tolerance 1e-9 for delta 
+        // when using float point math, its not exact so we use tolerance 1e-9 for delta
         // double check if correct tolerance
         assertEquals(5.0, new Vector2D(3.0, 4.0).magnitude(), 1e-8);
     }
-
 
     @Test
     void normalize_nonZero() {
@@ -64,14 +56,11 @@ public class Vector2DTest {
         assertEquals(0.0, unit.y);
     }
 
-
     @Test
     void normalize_zeroVector() {
         Vector2D unit = new Vector2D(0.0, 0.0).normalize();
-        
+
         assertEquals(0.0, unit.magnitude(), 1e-9);
     }
 
-
 }
-    

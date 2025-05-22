@@ -2,6 +2,10 @@ package org.lwjgl.opengl;
 
 import java.nio.ByteBuffer;
 
+// during testing, no window or OpenGL is created so the native library is never loaded
+// there will be a unsatisfiedLinkError 
+// or NosuchMethodError
+// this is so we just call the stub and test it
 public final class GL11 {
 
     // constants
