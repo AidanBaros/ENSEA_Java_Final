@@ -4,34 +4,44 @@ import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Enumeration;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class PhysicsEngine {
-    private ArrayList<Body> bodies = new ArrayList<Body>();
+    // Configuration fields
     private Double simulationDeltaT = 0.001;
-    private Dictionary<String, Double> gravityDict =  new Hashtable<>();
-    private String gravityType = "game";
-    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    private Double timeScale = 1.0; // 1.0 = real time, 0.5 = half speed, 2.0 = double speed
+    private Double timeScale = 1.0;
     private Double adjustedDeltaT = simulationDeltaT * timeScale;
 
-    public Double getTimeScale(){ return timeScale;}
-    public void setTimeScale(Double timeScale){ this.timeScale = timeScale;}
+    // State
+    private ArrayList<Body> bodies = new ArrayList<>();
+    private Dictionary<String, Double> gravityDict = new Hashtable<>();
+    private String gravityType = "game";
 
-    
-    public PhysicsEngine(ArrayList<Body> bodies){
+    // Concurrency
+    private final ExecutorService executor =
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+    public PhysicsEngine(ArrayList<Body> bodies) {
         this.bodies = bodies;
-        gravityDict.put("standard",6.67430e-11);
-        gravityDict.put("earth",-9.8);
-        gravityDict.put("game",1.0);
+        gravityDict.put("standard", 6.67430e-11);
+        gravityDict.put("earth", -9.8);
+        gravityDict.put("game", 1.0);
     }
 
-    public void setGravityType(String gravityType){
-        if (gravityDict.get(gravityType) != null){
+    // Public API
+    public Double getTimeScale() {
+        return timeScale;
+    }
+
+    public void setTimeScale(Double timeScale) {
+        this.timeScale = timeScale;
+    }
+
+    public void setGravityType(String gravityType) {
+        if (gravityDict.get(gravityType) != null) {
             this.gravityType = gravityType;
         } else {
             System.out.println("Invalid gravity type. Defaulting to game gravity.");
@@ -43,171 +53,7 @@ public class PhysicsEngine {
         adjustedDeltaT = simulationDeltaT * timeScale;
         applyGravity(true, gravityDict.get(gravityType));
         moveBodies();
-        resolveCollisions(); 
-    }
-    
-    public void resolveCollisions() {
-        ArrayList<CollisionPair> collisionPairs = new ArrayList<>();
-
-        for (int i = 0; i < bodies.size(); i++) {
-            Body bodyA = bodies.get(i);
-            for (int j = i + 1; j < bodies.size(); j++) {
-                Body bodyB = bodies.get(j);
-                double distance = bodyA.getPosition().distance(bodyB.getPosition());
-                double collisionDistance = bodyA.getSize() + bodyB.getSize();
-
-                if (distance <= collisionDistance) {
-                    collisionPairs.add(new CollisionPair(bodyA, bodyB));
-                }
-            }
-        }
-
-        ArrayList<Callable<Void>> tasks = new ArrayList<>();
-        for (CollisionPair pair : collisionPairs) {
-            tasks.add(() -> {
-                resolveCollision(pair.bodyA, pair.bodyB);
-                return null;
-            });
-        }
-
-        try {
-            executor.invokeAll(tasks);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    private void resolveCollision(Body bodyA, Body bodyB) {
-        Vector2D delta = bodyB.getPosition().subtract(bodyA.getPosition());
-        Double distance = delta.magnitude();
-        Double minDistance = bodyA.getSize() + bodyB.getSize();
-
-        if (distance == 0.0) return;
-
-        Vector2D normal = delta.normalize();
-        Double penetration = minDistance - distance;
-
-        if (penetration > 0) {
-            Double totalMass = bodyA.getMass() + bodyB.getMass();
-            Vector2D correction = normal.scale(penetration / totalMass);
-
-            synchronized (bodyA) {
-                bodyA.move(bodyA.getPosition().subtract(correction.scale(bodyB.getMass())));
-            }
-            synchronized (bodyB) {
-                bodyB.move(bodyB.getPosition().add(correction.scale(bodyA.getMass())));
-            }
-        }
-
-        Vector2D relativeVelocity = bodyB.getVelocity().subtract(bodyA.getVelocity());
-        double velAlongNormal = relativeVelocity.dot(normal);
-
-        if (velAlongNormal >= 0) return;
-
-        double restitution = 0.8;
-
-        double impulseScalar = -(1 + restitution) * velAlongNormal / 
-                (1 / bodyA.getMass() + 1 / bodyB.getMass());
-
-        Vector2D impulse = normal.scale(impulseScalar);
-
-        synchronized (bodyA) {
-            bodyA.setVelocity(bodyA.getVelocity().subtract(impulse.scale(1 / bodyA.getMass())));
-        }
-        synchronized (bodyB) {
-            bodyB.setVelocity(bodyB.getVelocity().add(impulse.scale(1 / bodyB.getMass())));
-        }
-
-        bodyA.setColliding(true);
-        bodyB.setColliding(true);
-    }
-
-
-    public void moveBodies() {
-        ArrayList<Callable<Void>> tasks = new ArrayList<>();
-
-        for (Body body : bodies) {
-            tasks.add(() -> {
-                body.move(body.getPosition().add(body.getVelocity().scale(adjustedDeltaT)));
-                return null;
-            });
-        }
-
-        try {
-            executor.invokeAll(tasks);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    public void applyGravity(boolean isNBody, double gravity) {
-    if (!isNBody) {
-        ArrayList<Callable<Void>> tasks = new ArrayList<>();
-        for (Body body : bodies) {
-            tasks.add(() -> {
-                directionalGravity(body, gravity);
-                return null;
-            });
-        }
-
-        try {
-            executor.invokeAll(tasks);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-    } else {
-        ArrayList<Callable<Void>> tasks = new ArrayList<>();
-
-        for (int i = 0; i < bodies.size(); i++) {
-            Body bodyA = bodies.get(i);
-            for (int j = i + 1; j < bodies.size(); j++) {
-                Body bodyB = bodies.get(j);
-
-                tasks.add(() -> {
-                    bodyGravity(bodyA, bodyB, gravity);
-                    return null;
-                });
-            }
-        }
-
-        try {
-            executor.invokeAll(tasks);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-}
-
-    public void bodyGravity(Body bodyA, Body bodyB, Double gravity){
-        Vector2D direction = bodyB.getPosition().subtract(bodyA.getPosition());
-        Double distance = direction.magnitude();
-        Vector2D normal = direction.normalize();
-
-        Double forceMagnitude = (gravity * bodyA.getMass() * bodyB.getMass()) / (distance * distance);
-        Vector2D accelerationA = normal.scale(forceMagnitude / bodyA.getMass());
-        Vector2D accelerationB = normal.scale(-forceMagnitude / bodyB.getMass());
-
-        // Update velocities
-        synchronized (bodyA) {
-            bodyA.setVelocity(bodyA.getVelocity().add(accelerationA.scale(adjustedDeltaT)));
-        }
-        synchronized (bodyB) {
-            bodyB.setVelocity(bodyB.getVelocity().add(accelerationB.scale(adjustedDeltaT)));
-        }
-    }
-
-    public void directionalGravity(Body body, Double gravity){
-        Vector2D gravityVector = new Vector2D(0.0, gravity);
-        body.setVelocity(body.getVelocity().add(gravityVector.scale(adjustedDeltaT)));
-    }
-
-    private void waitForTasks() {
-        try {
-            executor.awaitTermination(1, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        resolveCollisions();
     }
 
     public void shutdownExecutor() {
@@ -216,6 +62,137 @@ public class PhysicsEngine {
         }
     }
 
+    // Core simulation steps
+    public void applyGravity(boolean isNBody, double gravity) {
+        if (!isNBody) {
+            runTasks(b -> directionalGravity(b, gravity));
+        } else {
+            ArrayList<Callable<Void>> tasks = new ArrayList<>();
+            for (int i = 0; i < bodies.size(); i++) {
+                Body bodyA = bodies.get(i);
+                for (int j = i + 1; j < bodies.size(); j++) {
+                    Body bodyB = bodies.get(j);
+                    tasks.add(() -> {
+                        bodyGravity(bodyA, bodyB, gravity);
+                        return null;
+                    });
+                }
+            }
+            invokeAll(tasks);
+        }
+    }
+
+    public void moveBodies() {
+        runTasks(b -> b.move(b.getPosition().add(b.getVelocity().scale(adjustedDeltaT))));
+    }
+
+    public void resolveCollisions() {
+        ArrayList<CollisionPair> pairs = new ArrayList<>();
+        for (int i = 0; i < bodies.size(); i++) {
+            Body a = bodies.get(i);
+            for (int j = i + 1; j < bodies.size(); j++) {
+                Body b = bodies.get(j);
+                double dist = a.getPosition().distance(b.getPosition());
+                if (dist <= a.getSize() + b.getSize()) {
+                    pairs.add(new CollisionPair(a, b));
+                }
+            }
+        }
+
+        ArrayList<Callable<Void>> tasks = new ArrayList<>();
+        for (CollisionPair p : pairs) {
+            tasks.add(() -> {
+                resolveCollision(p.bodyA, p.bodyB);
+                return null;
+            });
+        }
+        invokeAll(tasks);
+    }
+
+    // Gravity implementations
+    public void bodyGravity(Body a, Body b, Double gravity) {
+        Vector2D dir = b.getPosition().subtract(a.getPosition());
+        Double dist = dir.magnitude();
+        Vector2D normal = dir.normalize();
+        Double force = (gravity * a.getMass() * b.getMass()) / (dist * dist);
+
+        Vector2D accA = normal.scale(force / a.getMass());
+        Vector2D accB = normal.scale(-force / b.getMass());
+
+        synchronized (a) {
+            a.setVelocity(a.getVelocity().add(accA.scale(adjustedDeltaT)));
+        }
+        synchronized (b) {
+            b.setVelocity(b.getVelocity().add(accB.scale(adjustedDeltaT)));
+        }
+    }
+
+    public void directionalGravity(Body body, Double gravity) {
+        Vector2D grav = new Vector2D(0.0, gravity);
+        body.setVelocity(body.getVelocity().add(grav.scale(adjustedDeltaT)));
+    }
+
+    // Collision resolution
+    private void resolveCollision(Body a, Body b) {
+        Vector2D delta = b.getPosition().subtract(a.getPosition());
+        Double dist = delta.magnitude();
+        Double minDist = a.getSize() + b.getSize();
+        if (dist == 0.0) return;
+
+        Vector2D normal = delta.normalize();
+        Double penetration = minDist - dist;
+        if (penetration > 0) {
+            Double totalMass = a.getMass() + b.getMass();
+            Vector2D correction = normal.scale(penetration / totalMass);
+            synchronized (a) {
+                a.move(a.getPosition().subtract(correction.scale(b.getMass())));
+            }
+            synchronized (b) {
+                b.move(b.getPosition().add(correction.scale(a.getMass())));
+            }
+        }
+
+        Vector2D relVel = b.getVelocity().subtract(a.getVelocity());
+        double velAlongNormal = relVel.dot(normal);
+        if (velAlongNormal >= 0) return;
+
+        double restitution = 0.8;
+        double impulseScalar = -(1 + restitution) * velAlongNormal
+            / (1 / a.getMass() + 1 / b.getMass());
+        Vector2D impulse = normal.scale(impulseScalar);
+
+        synchronized (a) {
+            a.setVelocity(a.getVelocity().subtract(impulse.scale(1 / a.getMass())));
+        }
+        synchronized (b) {
+            b.setVelocity(b.getVelocity().add(impulse.scale(1 / b.getMass())));
+        }
+
+        a.setColliding(true);
+        b.setColliding(true);
+    }
+
+    // Utility for parallel tasks
+    private void runTasks(java.util.function.Consumer<Body> action) {
+        ArrayList<Callable<Void>> tasks = new ArrayList<>();
+        for (Body b : bodies) {
+            tasks.add(() -> {
+                action.accept(b);
+                return null;
+            });
+        }
+        invokeAll(tasks);
+    }
+
+    private void invokeAll(ArrayList<Callable<Void>> tasks) {
+        try {
+            executor.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    // Inner types
     private static class CollisionPair {
         Body bodyA, bodyB;
 

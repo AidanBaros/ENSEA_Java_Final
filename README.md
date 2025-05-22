@@ -93,6 +93,17 @@ Simulation scenarios are encoded using JSON files. The JSON files are located in
         - Stating position
         - Color
 
-## UML Diagram
-![UML Diagram](demo/diagram/uml-diagram.png?raw=true&v=6c328dc)
+## Main Ideas brainstormed so far:
+- Physics simulator
+	- Balls bouncing around in another ball
+	- N-body gravitational simulation
+	- SPH fluid simulation 
+- Chatroom
+- 2-player game
+- Scheduling app
+- Calendar + to do list + financing + time stamp + hr tracker + sleep tracker 
+- Sudoku solver
+
+![UML Diagram](demo/diagram/uml-diagram.png?raw=true&v=d5f07ea)
+
 
