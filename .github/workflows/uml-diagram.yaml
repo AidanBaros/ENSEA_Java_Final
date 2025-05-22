@@ -37,7 +37,7 @@ jobs:
 
       - name: Commit UML diagram
         run: |
-          git add demo/diagram/uml-diagram.png demo/diagram/uml-diagram.svg
+          git add -f demo/diagram/uml-diagram.png demo/diagram/uml-diagram.svg
           git commit -m "Update UML diagram [auto]" || echo "No changes to commit"
           git push
 
