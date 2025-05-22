@@ -86,7 +86,7 @@ Simulation scenarios are encoded using JSON files. The JSON files are located in
         - Color
 
 ## UML Diagram
-![UML Diagram](demo/diagram/uml-diagram.png?raw=true&v=b8cc536)
+![UML Diagram](demo/diagram/uml-diagram.png?raw=true&v=6f07873)
 
 ## Main Ideas brainstormed so far:
 - Physics simulator
